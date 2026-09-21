@@ -1,0 +1,39 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  project: CollectionEntry<'work'>;
+  index: number;
+}
+
+const { project, index } = Astro.props;
+const number = String(index + 1).padStart(2, '0');
+---
+
+<article class="work-card">
+  <a href={`/work/${project.id}`} aria-label={`View ${project.data.title}`}>
+    <div class="work-card-media">
+      {project.data.cover ? (
+        <img
+          src={project.data.cover}
+          alt={project.data.coverAlt ?? ''}
+          loading="lazy"
+          decoding="async"
+        />
+      ) : (
+        <span class="placeholder-number" aria-hidden="true">
+          {number}
+        </span>
+      )}
+    </div>
+    <div class="work-card-copy">
+      <div>
+        <p class="meta-line">
+          {number} · {project.data.year}
+        </p>
+        <h3>{project.data.title}</h3>
+      </div>
+      <p>{project.data.summary}</p>
+    </div>
+  </a>
+</article>
