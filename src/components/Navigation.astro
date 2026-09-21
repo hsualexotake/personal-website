@@ -1,0 +1,35 @@
+---
+import { site } from '../lib/site';
+
+const pathname = Astro.url.pathname;
+const links = [
+  { href: '/', label: 'Home' },
+  { href: '/work', label: 'Work' },
+  { href: '/about', label: 'About' },
+];
+
+const isCurrent = (href: string) =>
+  href === '/' ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
+---
+
+<header class="site-header">
+  <a class="wordmark" href="/" aria-label={`${site.displayName}, home`}>
+    <span class="wordmark-long">{site.displayName}</span>
+    <span class="wordmark-short" aria-hidden="true">
+      {site.shortName}
+    </span>
+  </a>
+
+  <nav class="site-nav" aria-label="Primary navigation">
+    {links.map(({ href, label }) => (
+      <a href={href} aria-current={isCurrent(href) ? 'page' : undefined}>
+        {label}
+      </a>
+    ))}
+  </nav>
+
+  <a class="contact-link" href={`mailto:${site.email}`}>
+    <span>Contact</span>
+    <span class="contact-dot" aria-hidden="true"></span>
+  </a>
+</header>

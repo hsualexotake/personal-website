@@ -1,0 +1,32 @@
+---
+import { site } from '../lib/site';
+---
+
+<footer class="site-footer shell">
+  <div>
+    <p class="footer-heading">{site.availability}</p>
+    <a class="footer-email" href={`mailto:${site.email}`}>
+      {site.email}
+    </a>
+  </div>
+
+  <div class="footer-meta">
+    <p>{site.location}</p>
+    <nav aria-label="Social links">
+      {site.socials.map(({ label, url }) => (
+        <a href={url} rel="me noreferrer" target="_blank">
+          {label}
+          <span class="visually-hidden"> (opens in a new tab)</span>
+        </a>
+      ))}
+      {site.resume && (
+        <a href={site.resume} target="_blank">
+          Résumé<span class="visually-hidden"> (opens in a new tab)</span>
+        </a>
+      )}
+    </nav>
+    <p>
+      © {new Date().getFullYear()} {site.displayName}
+    </p>
+  </div>
+</footer>

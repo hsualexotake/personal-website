@@ -1,0 +1,196 @@
+media:
+  - name: images
+    label: Images
+    input: public/media/images
+    output: /media/images
+    categories: [image]
+    rename: safe
+  - name: documents
+    label: Documents
+    input: public/media/documents
+    output: /media/documents
+    categories: [document]
+    rename: safe
+
+settings:
+  content:
+    merge: true
+  commit:
+    identity: user
+    templates:
+      create: 'content: create {name}'
+      update: 'content: update {name}'
+      delete: 'content: delete {name}'
+      rename: 'content: rename {oldPath} to {newPath}'
+
+content:
+  - name: site
+    label: Site settings
+    type: file
+    path: src/data/site.json
+    format: json
+    fields:
+      - { name: displayName, label: Display name, type: string, required: true }
+      - { name: shortName, label: Short name, type: string, required: true }
+      - { name: headline, label: Headline, type: text, required: true }
+      - { name: description, label: Default SEO description, type: text, required: true }
+      - { name: email, label: Contact email, type: string, required: true }
+      - { name: location, label: Location line, type: string, required: true }
+      - { name: availability, label: Availability line, type: string, required: true }
+      - name: resume
+        label: Résumé PDF
+        type: file
+        required: false
+        options:
+          media: documents
+          extensions: [pdf]
+      - name: socialImage
+        label: Default social image
+        type: image
+        required: false
+        options:
+          media: images
+      - name: socials
+        label: Social links
+        type: object
+        list:
+          collapsible:
+            collapsed: true
+            summary: '{label}'
+        fields:
+          - { name: label, label: Label, type: string, required: true }
+          - { name: url, label: URL, type: string, required: true }
+
+  - name: narrative
+    label: Narrative pages
+    type: group
+    items:
+      - name: home
+        label: Home
+        type: file
+        path: src/content/pages/home.md
+        fields:
+          - { name: title, label: Page title, type: string, required: true }
+          - { name: description, label: SEO description, type: text, required: true }
+          - { name: eyebrow, label: Eyebrow, type: string, required: false }
+          - { name: heroTitle, label: Hero title, type: text, required: true }
+          - { name: heroCtaLabel, label: Hero link label, type: string, required: false }
+          - { name: heroCtaHref, label: Hero link target, type: string, required: false }
+          - name: body
+            label: Introduction
+            type: rich-text
+            required: true
+            options:
+              media: images
+              format: markdown
+      - name: about
+        label: About
+        type: file
+        path: src/content/pages/about.md
+        fields:
+          - { name: title, label: Page title, type: string, required: true }
+          - { name: description, label: SEO description, type: text, required: true }
+          - { name: eyebrow, label: Eyebrow, type: string, required: false }
+          - { name: heroTitle, label: Hero title, type: text, required: true }
+          - name: body
+            label: About content
+            type: rich-text
+            required: true
+            options:
+              media: images
+              format: markdown
+
+  - name: timeline
+    label: Timeline
+    type: collection
+    path: src/content/timeline
+    filename: '{primary}.md'
+    view:
+      primary: title
+      fields: [title, period, category, order]
+      sort: [order, title]
+      default:
+        sort: order
+        order: asc
+    fields:
+      - { name: title, label: Title, type: string, required: true }
+      - { name: period, label: Period, type: string, required: true }
+      - { name: summary, label: Summary, type: text, required: true }
+      - name: category
+        label: Category
+        type: select
+        required: true
+        options:
+          values:
+            - { name: personal, label: Personal }
+            - { name: work, label: Work }
+            - { name: project, label: Project }
+      - name: order
+        label: Display order
+        type: number
+        required: true
+        options:
+          min: 0
+      - name: image
+        label: Image
+        type: image
+        required: false
+        options:
+          media: images
+      - { name: imageAlt, label: Image alt text, type: string, required: false }
+      - name: project
+        label: Project path
+        type: string
+        required: false
+        description: 'Optional site path, for example /work/project-alpha'
+
+  - name: work
+    label: Work
+    type: collection
+    path: src/content/work
+    filename: '{primary}.md'
+    view:
+      primary: title
+      fields: [title, year, role, featured, draft, order]
+      sort: [order, year, title]
+      search: [title, summary, role]
+      default:
+        sort: order
+        order: asc
+    fields:
+      - { name: title, label: Title, type: string, required: true }
+      - { name: summary, label: Summary, type: text, required: true }
+      - { name: year, label: Year, type: string, required: true }
+      - { name: role, label: Role, type: string, required: true }
+      - name: cover
+        label: Cover image
+        type: image
+        required: false
+        options:
+          media: images
+      - { name: coverAlt, label: Cover alt text, type: string, required: false }
+      - { name: featured, label: Feature on home, type: boolean, required: true }
+      - name: order
+        label: Display order
+        type: number
+        required: true
+        options:
+          min: 0
+      - { name: draft, label: Draft, type: boolean, required: true }
+      - name: links
+        label: External links
+        type: object
+        list:
+          collapsible:
+            collapsed: true
+            summary: '{label}'
+        fields:
+          - { name: label, label: Label, type: string, required: true }
+          - { name: url, label: URL, type: string, required: true }
+      - name: body
+        label: Case study
+        type: rich-text
+        required: true
+        options:
+          media: images
+          format: markdown
