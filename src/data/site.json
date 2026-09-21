@@ -1,13 +1,11 @@
 {
-  "displayName": "Your Name",
+  "displayName": "Alex Otake hsu",
   "shortName": "YN",
   "headline": "A personal space for thoughtful work and evolving ideas.",
   "description": "A story-led personal website about work, interests, and the moments connecting them.",
   "email": "hello@example.com",
   "location": "Based somewhere · working everywhere",
   "availability": "Open to thoughtful conversations",
-  "resume": "",
-  "socialImage": "",
   "socials": [
     {
       "label": "GitHub",
