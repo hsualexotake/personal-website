@@ -1,10 +1,10 @@
 {
-  "displayName": "Alex Otake hsu",
+  "displayName": "Alex Otake Hsu",
   "shortName": "YN",
   "headline": "A personal space for thoughtful work and evolving ideas.",
   "description": "A story-led personal website about work, interests, and the moments connecting them.",
-  "email": "hello@example.com",
-  "location": "Based somewhere · working everywhere",
+  "email": "hsualexotake@gmail.com",
+  "location": "based in nyc",
   "availability": "Open to thoughtful conversations",
   "socials": [
     {
@@ -13,7 +13,7 @@
     },
     {
       "label": "LinkedIn",
-      "url": "https://www.linkedin.com/in/your-handle"
+      "url": "https://www.linkedin.com/in/alex-hsu-bba77b223/"
     }
   ]
 }
