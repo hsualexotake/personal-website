@@ -9,8 +9,8 @@ const siteSchema = z.object({
   email: z.email(),
   location: z.string(),
   availability: z.string(),
-  resume: z.string(),
-  socialImage: z.string(),
+  resume: z.string().optional().default(''),
+  socialImage: z.string().optional().default(''),
   socials: z.array(
     z.object({
       label: z.string(),
