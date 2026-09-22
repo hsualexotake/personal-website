@@ -1,0 +1,43 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  entry: CollectionEntry<'bside'>;
+  index: number;
+}
+
+const { entry, index } = Astro.props;
+const number = String(index + 1).padStart(2, '0');
+---
+
+<article class="bside-card">
+  <a class="bside-card-link" href={`/b-side/${entry.id}`} aria-label={`Open ${entry.data.title}`}>
+    <span class="bside-number" aria-hidden="true">
+      {number}
+    </span>
+    <div class:list={['bside-media', `bside-media--${entry.data.orientation}`]}>
+      {entry.data.image ? (
+        <img
+          src={entry.data.image}
+          alt={entry.data.imageAlt ?? ''}
+          loading="lazy"
+          decoding="async"
+        />
+      ) : (
+        <span class="bside-placeholder" aria-hidden="true">
+          <span>{number}</span>
+          <span>Image goes here</span>
+        </span>
+      )}
+    </div>
+    <div class="bside-card-copy">
+      <div>
+        <p class="meta-line">
+          {entry.data.category} · {entry.data.year}
+        </p>
+        <h2>{entry.data.title}</h2>
+      </div>
+      <p>{entry.data.description}</p>
+    </div>
+  </a>
+</article>

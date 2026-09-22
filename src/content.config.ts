@@ -37,6 +37,21 @@ const work = defineCollection({
   }),
 });
 
+const bside = defineCollection({
+  loader: glob({ base: './src/content/bside', pattern: '**/*.md' }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    category: z.string(),
+    year: z.string(),
+    image: z.string().optional(),
+    imageAlt: z.string().optional(),
+    orientation: z.enum(['landscape', 'portrait', 'square', 'wide']).default('landscape'),
+    order: z.number().int().default(0),
+    draft: z.boolean().default(false),
+  }),
+});
+
 const timeline = defineCollection({
   loader: glob({ base: './src/content/timeline', pattern: '**/*.md' }),
   schema: z.object({
@@ -51,4 +66,4 @@ const timeline = defineCollection({
   }),
 });
 
-export const collections = { pages, work, timeline };
+export const collections = { pages, work, bside, timeline };
