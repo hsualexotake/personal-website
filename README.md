@@ -44,6 +44,7 @@ Content has one source of truth:
 - `src/content/pages` contains the Home introduction and About narrative.
 - `src/content/timeline` contains independently reorderable timeline milestones.
 - `src/content/work` contains project metadata and Markdown case studies.
+- `src/content/bside` contains the informal B—side archive, including images and notes.
 - `public/media` receives images and documents uploaded through the CMS.
 
 To use the visual editor:
@@ -64,8 +65,9 @@ Before launch:
 2. Rewrite the Home and About Markdown files.
 3. Replace or remove every demo timeline milestone.
 4. Replace the demo projects with real case studies and upload media through Pages CMS.
-5. Add a résumé and social preview image if wanted; both remain hidden when empty.
-6. Set `SITE_URL` to the connected production domain in Vercel.
+5. Replace or remove the five starter B—side entries and upload their images.
+6. Add a résumé and social preview image if wanted; both remain hidden when empty.
+7. Set `SITE_URL` to the connected production domain in Vercel.
 
 ## Deployment
 

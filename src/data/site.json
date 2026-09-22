@@ -5,6 +5,7 @@
   "description": "A story-led personal website about work, interests, and the moments connecting them.",
   "email": "hsualexotake@gmail.com",
   "location": "based in nyc",
+  "timezone": "America/New_York",
   "availability": "Open to thoughtful conversations",
   "socials": [
     {

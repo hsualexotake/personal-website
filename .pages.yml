@@ -36,6 +36,11 @@ content:
       - { name: description, label: Default SEO description, type: text, required: true }
       - { name: email, label: Contact email, type: string, required: true }
       - { name: location, label: Location line, type: string, required: true }
+      - name: timezone
+        label: Local timezone
+        type: string
+        required: true
+        description: 'IANA timezone, for example America/New_York'
       - { name: availability, label: Availability line, type: string, required: true }
       - name: resume
         label: Résumé PDF
@@ -94,6 +99,22 @@ content:
           - { name: heroTitle, label: Hero title, type: text, required: true }
           - name: body
             label: About content
+            type: rich-text
+            required: true
+            options:
+              media: images
+              format: markdown
+      - name: b-side
+        label: B—side introduction
+        type: file
+        path: src/content/pages/b-side.md
+        fields:
+          - { name: title, label: Page title, type: string, required: true }
+          - { name: description, label: SEO description, type: text, required: true }
+          - { name: eyebrow, label: Eyebrow, type: string, required: false }
+          - { name: heroTitle, label: Hero title, type: text, required: true }
+          - name: body
+            label: Introduction
             type: rich-text
             required: true
             options:
@@ -189,6 +210,60 @@ content:
           - { name: url, label: URL, type: string, required: true }
       - name: body
         label: Case study
+        type: rich-text
+        required: true
+        options:
+          media: images
+          format: markdown
+
+  - name: bside
+    label: B—side
+    type: collection
+    path: src/content/bside
+    filename: '{primary}.md'
+    view:
+      primary: title
+      fields: [title, category, year, orientation, draft, order]
+      sort: [order, year, title]
+      search: [title, description, category]
+      default:
+        sort: order
+        order: asc
+    fields:
+      - { name: title, label: Title, type: string, required: true }
+      - { name: description, label: Short description, type: text, required: true }
+      - { name: category, label: Category, type: string, required: true }
+      - { name: year, label: Year, type: string, required: true }
+      - name: image
+        label: Main image
+        type: image
+        required: false
+        options:
+          media: images
+      - name: imageAlt
+        label: Image alt text
+        type: string
+        required: false
+        description: Describe the image for someone who cannot see it.
+      - name: orientation
+        label: Image shape
+        type: select
+        required: true
+        options:
+          values:
+            - { name: landscape, label: 'Landscape (4:3)' }
+            - { name: portrait, label: 'Portrait (3:4)' }
+            - { name: square, label: Square }
+            - { name: wide, label: 'Wide (16:9)' }
+      - name: order
+        label: Display order
+        type: number
+        required: true
+        options:
+          min: 0
+      - { name: draft, label: Draft, type: boolean, required: true }
+      - name: body
+        label: Notes and additional media
         type: rich-text
         required: true
         options:

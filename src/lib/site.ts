@@ -8,6 +8,7 @@ const siteSchema = z.object({
   description: z.string(),
   email: z.email(),
   location: z.string(),
+  timezone: z.string(),
   availability: z.string(),
   resume: z.string().optional().default(''),
   socialImage: z.string().optional().default(''),
