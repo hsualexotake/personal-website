@@ -67,7 +67,7 @@
 .timeline-item.is-active .timeline-marker span {
   border-color: var(--color-accent);
   background: var(--color-accent);
-  box-shadow: 0 0 0 0.45rem rgb(255 90 31 / 12%);
+  box-shadow: 0 0 0 0.45rem color-mix(in srgb, var(--color-accent), transparent 88%);
   transform: scale(1.1);
 }
 
@@ -128,11 +128,10 @@
 
 .timeline-copy h3 {
   margin: 0;
-  font-family: var(--font-serif);
   font-size: clamp(2.25rem, 4.5vw, 4.75rem);
-  font-weight: 400;
-  letter-spacing: -0.035em;
-  line-height: 0.96;
+  font-weight: 500;
+  letter-spacing: -0.055em;
+  line-height: 0.92;
 }
 
 .timeline-copy h3 a {
@@ -159,10 +158,9 @@
   aspect-ratio: 4 / 3;
   overflow: hidden;
   place-items: center;
+  border: 1px solid var(--color-line);
   border-radius: var(--radius-sm);
-  background:
-    linear-gradient(35deg, transparent 49.8%, rgb(23 23 21 / 6%) 50%, transparent 50.2%),
-    var(--color-surface);
+  background: var(--color-surface);
 }
 
 .timeline-media img {
