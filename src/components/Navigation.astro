@@ -1,49 +1,10 @@
 ---
-import { site } from '../lib/site';
-
 const pathname = Astro.url.pathname;
-const links = [
-  { href: '/work', label: 'Work' },
-  { href: '/b-side', label: 'B—side' },
-  { href: '/about', label: 'About' },
-];
-
-const isCurrent = (href: string) =>
-  href === '/' ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
+const isCurrent = pathname === '/b-side' || pathname.startsWith('/b-side/');
 ---
 
 <header class="site-header">
-  <a class="home-mark" href="/" aria-label={`${site.displayName}, home`}>
-    {site.displayName}
-  </a>
-
-  <p class="site-place">
-    <span>{site.location}</span>
-    <span aria-hidden="true">·</span>
-    <time data-site-time data-timezone={site.timezone}></time>
-  </p>
-
   <nav class="site-nav" aria-label="Primary navigation">
-    {links.map(({ href, label }) => (
-      <a href={href} aria-current={isCurrent(href) ? 'page' : undefined}>
-        {label}
-      </a>
-    ))}
+    <a href="/b-side" aria-current={isCurrent ? 'page' : undefined}>B—side</a>
   </nav>
 </header>
-
-<script>
-  const time = document.querySelector<HTMLTimeElement>('[data-site-time]');
-  const updateTime = () => {
-    if (!time) return;
-    const now = new Date();
-    time.dateTime = now.toISOString();
-    time.textContent = new Intl.DateTimeFormat('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      timeZone: time.dataset.timezone,
-    }).format(now);
-  };
-  updateTime();
-  window.setInterval(updateTime, 30_000);
-</script>
