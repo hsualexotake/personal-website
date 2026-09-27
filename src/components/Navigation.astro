@@ -13,21 +13,9 @@ const isCurrent = (href: string) =>
 ---
 
 <header class="site-header">
-  <div class="appearance-switcher" aria-label="Color theme">
-    <span aria-hidden="true">[</span>
-    <button type="button" data-theme-option="light" aria-pressed="true">
-      Light
-    </button>
-    <span aria-hidden="true">/</span>
-    <button type="button" data-theme-option="dark" aria-pressed="false">
-      Dark
-    </button>
-    <span aria-hidden="true">/</span>
-    <a class="home-mark" href="/" aria-label={`${site.displayName}, home`}>
-      {site.shortName}
-    </a>
-    <span aria-hidden="true">]</span>
-  </div>
+  <a class="home-mark" href="/" aria-label={`${site.displayName}, home`}>
+    {site.displayName}
+  </a>
 
   <p class="site-place">
     <span>{site.location}</span>
@@ -45,30 +33,6 @@ const isCurrent = (href: string) =>
 </header>
 
 <script>
-  const root = document.documentElement;
-  const themeButtons = Array.from(
-    document.querySelectorAll<HTMLButtonElement>('[data-theme-option]'),
-  );
-
-  const setTheme = (theme: 'light' | 'dark', remember = true) => {
-    root.dataset.theme = theme;
-    themeButtons.forEach((button) => {
-      button.setAttribute('aria-pressed', String(button.dataset.themeOption === theme));
-    });
-    document
-      .querySelector('meta[name="theme-color"]')
-      ?.setAttribute('content', theme === 'dark' ? '#151514' : '#fbfbf8');
-    if (remember) localStorage.setItem('theme', theme);
-  };
-
-  const initialTheme = root.dataset.theme === 'dark' ? 'dark' : 'light';
-  setTheme(initialTheme, false);
-  themeButtons.forEach((button) => {
-    button.addEventListener('click', () => {
-      setTheme(button.dataset.themeOption === 'dark' ? 'dark' : 'light');
-    });
-  });
-
   const time = document.querySelector<HTMLTimeElement>('[data-site-time]');
   const updateTime = () => {
     if (!time) return;

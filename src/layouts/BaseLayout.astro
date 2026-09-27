@@ -1,6 +1,5 @@
 ---
 import '@fontsource-variable/geist';
-import '@fontsource/instrument-serif';
 import Footer from '../components/Footer.astro';
 import Navigation from '../components/Navigation.astro';
 import { site } from '../lib/site';
@@ -30,18 +29,7 @@ const socialImage = image ? new URL(image, Astro.site ?? Astro.url).toString() :
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
-    <meta name="theme-color" content="#fbfbf8" />
-    <script is:inline>
-      (() => {
-        try {
-          const stored = localStorage.getItem('theme');
-          const preferred = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-          document.documentElement.dataset.theme = stored || preferred;
-        } catch {
-          document.documentElement.dataset.theme = 'light';
-        }
-      })();
-    </script>
+    <meta name="theme-color" content="#ffffff" />
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
