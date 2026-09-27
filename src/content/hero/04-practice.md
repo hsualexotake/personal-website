@@ -1,6 +1,7 @@
 ---
-title: A creative practice
-description: Use this card for a process or habit that keeps you curious.
+title: "Lisbon, Portugal "
+description: "Lisbon, Portugal "
 format: portrait
 order: 4
+image: /media/images/img9458.jpeg
 ---
