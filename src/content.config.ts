@@ -7,10 +7,23 @@ const pages = defineCollection({
   schema: z.object({
     title: z.string(),
     description: z.string(),
+    heroGreeting: z.string().optional(),
     eyebrow: z.string().optional(),
     heroTitle: z.string().optional(),
     heroCtaLabel: z.string().optional(),
     heroCtaHref: z.string().optional(),
+  }),
+});
+
+const hero = defineCollection({
+  loader: glob({ base: './src/content/hero', pattern: '**/*.md' }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    image: z.string().optional(),
+    imageAlt: z.string().optional(),
+    format: z.enum(['portrait', 'square', 'landscape']).default('portrait'),
+    order: z.number().int(),
   }),
 });
 
@@ -66,4 +79,4 @@ const timeline = defineCollection({
   }),
 });
 
-export const collections = { pages, work, bside, timeline };
+export const collections = { pages, hero, work, bside, timeline };

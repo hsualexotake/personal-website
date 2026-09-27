@@ -77,17 +77,10 @@ content:
         fields:
           - { name: title, label: Page title, type: string, required: true }
           - { name: description, label: SEO description, type: text, required: true }
-          - { name: eyebrow, label: Eyebrow, type: string, required: false }
-          - { name: heroTitle, label: Hero title, type: text, required: true }
-          - { name: heroCtaLabel, label: Hero link label, type: string, required: false }
-          - { name: heroCtaHref, label: Hero link target, type: string, required: false }
-          - name: body
-            label: Introduction
-            type: rich-text
+          - name: heroGreeting
+            label: Center greeting
+            type: string
             required: true
-            options:
-              media: images
-              format: markdown
       - name: about
         label: About
         type: file
@@ -120,6 +113,48 @@ content:
             options:
               media: images
               format: markdown
+
+  - name: hero
+    label: Home hero cards
+    type: collection
+    path: src/content/hero
+    filename: '{primary}.md'
+    view:
+      primary: title
+      fields: [title, format, order]
+      sort: [order, title]
+      default:
+        sort: order
+        order: asc
+    fields:
+      - { name: title, label: Title, type: string, required: true }
+      - name: description
+        label: Flip-side description
+        type: text
+        required: true
+        description: 'Keep this concise so it fits comfortably on the card.'
+      - name: image
+        label: Image
+        type: image
+        required: false
+        options:
+          media: images
+      - { name: imageAlt, label: Image alt text, type: string, required: false }
+      - name: format
+        label: Card format
+        type: select
+        required: true
+        options:
+          values:
+            - { name: portrait, label: Portrait }
+            - { name: square, label: Square }
+            - { name: landscape, label: Landscape }
+      - name: order
+        label: Display order
+        type: number
+        required: true
+        options:
+          min: 0
 
   - name: timeline
     label: Timeline

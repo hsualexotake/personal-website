@@ -1,5 +1,6 @@
 ---
-import { getCollection, getEntry, render } from 'astro:content';
+import { getCollection, getEntry } from 'astro:content';
+import HeroOrbit, { type HeroOrbitItem } from '../components/HeroOrbit.astro';
 import Timeline, { type TimelineItem } from '../components/Timeline';
 import WorkCard from '../components/WorkCard.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
@@ -8,7 +9,15 @@ import { site } from '../lib/site';
 const home = await getEntry('pages', 'home');
 if (!home) throw new Error('Missing src/content/pages/home.md');
 
-const { Content } = await render(home);
+const heroEntries = (await getCollection('hero')).sort((a, b) => a.data.order - b.data.order);
+const heroItems: HeroOrbitItem[] = heroEntries.map(({ id, data }) => ({
+  id,
+  title: data.title,
+  description: data.description,
+  image: data.image,
+  imageAlt: data.imageAlt,
+  format: data.format,
+}));
 const timelineEntries = (await getCollection('timeline')).sort(
   (a, b) => a.data.order - b.data.order,
 );
@@ -28,23 +37,12 @@ const projects = (await getCollection('work', ({ data }) => !data.draft && data.
 ---
 
 <BaseLayout title={site.displayName} description={home.data.description}>
-  <section class="home-hero shell">
-    <div class="home-hero-top">
-      <p class="eyebrow">{home.data.eyebrow}</p>
-      <p class="hero-index" aria-hidden="true">
-        01—03
-      </p>
-    </div>
-    <h1>{home.data.heroTitle}</h1>
-    <div class="home-intro prose-lead">
-      <Content />
-      {home.data.heroCtaHref && home.data.heroCtaLabel && (
-        <a class="text-link" href={home.data.heroCtaHref}>
-          {home.data.heroCtaLabel} <span aria-hidden="true">↓</span>
-        </a>
-      )}
-    </div>
-  </section>
+  <HeroOrbit
+    items={heroItems}
+    leftLabel={site.displayName}
+    centerLabel={home.data.heroGreeting ?? '大竹'}
+    rightLabel={site.location}
+  />
 
   <section class="timeline-section shell" id="timeline" aria-labelledby="timeline-title">
     <div class="section-heading">

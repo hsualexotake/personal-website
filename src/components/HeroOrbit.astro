@@ -1,0 +1,147 @@
+---
+export interface HeroOrbitItem {
+  id: string;
+  title: string;
+  description: string;
+  image?: string;
+  imageAlt?: string;
+  format: 'portrait' | 'square' | 'landscape';
+}
+
+interface Props {
+  items: HeroOrbitItem[];
+  leftLabel: string;
+  centerLabel: string;
+  rightLabel: string;
+}
+
+const { items, leftLabel, centerLabel, rightLabel } = Astro.props;
+const angleStep = items.length > 0 ? 360 / items.length : 0;
+const positionedItems = items.map((item, index) => {
+  const angle = (-108 + index * angleStep) * (Math.PI / 180);
+  const orbitRadius = 45;
+
+  return {
+    ...item,
+    index,
+    x: 50 + Math.cos(angle) * orbitRadius,
+    y: 50 + Math.sin(angle) * orbitRadius,
+  };
+});
+---
+
+<section class="hero-orbit" data-hero-orbit aria-labelledby="home-hero-title">
+  <div class="hero-orbit-stage">
+    <div class="hero-orbit-identity">
+      <h1 id="home-hero-title">{leftLabel}</h1>
+      <p lang="ja">{centerLabel}</p>
+      <p>{rightLabel}</p>
+    </div>
+
+    <ol class="hero-orbit-list" aria-label="Personal highlights">
+      {positionedItems.map((item) => {
+        const titleId = `hero-card-title-${item.id}`;
+        const descriptionId = `hero-card-description-${item.id}`;
+
+        return (
+          <li
+            class={`hero-orbit-item hero-orbit-item--${item.format}`}
+            style={`--hero-x: ${item.x.toFixed(3)}%; --hero-y: ${item.y.toFixed(3)}%;`}
+          >
+            <button
+              class="hero-orbit-card"
+              type="button"
+              data-hero-card
+              data-active="false"
+              aria-pressed="false"
+              aria-labelledby={titleId}
+              aria-describedby={descriptionId}
+            >
+              <span class="hero-orbit-card-inner">
+                <span class="hero-orbit-face hero-orbit-front" aria-hidden="true">
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt={item.imageAlt ?? ''}
+                      loading={item.index < 2 ? 'eager' : 'lazy'}
+                      decoding="async"
+                    />
+                  ) : (
+                    <span class="hero-orbit-placeholder">
+                      <span>{String(item.index + 1).padStart(2, '0')}</span>
+                      <small>Image</small>
+                    </span>
+                  )}
+                </span>
+                <span class="hero-orbit-face hero-orbit-back">
+                  <strong id={titleId}>{item.title}</strong>
+                  <span id={descriptionId}>{item.description}</span>
+                </span>
+              </span>
+            </button>
+          </li>
+        );
+      })}
+    </ol>
+  </div>
+</section>
+
+<script>
+  const initializeHeroOrbit = (root: HTMLElement) => {
+    if (root.dataset.enhanced === 'true') return;
+
+    root.dataset.enhanced = 'true';
+    const cards = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-hero-card]'));
+    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+    let activeCard: HTMLButtonElement | null = null;
+
+    const setActiveCard = (nextCard: HTMLButtonElement | null) => {
+      cards.forEach((card) => {
+        const isActive = card === nextCard;
+        card.dataset.active = String(isActive);
+        card.setAttribute('aria-pressed', String(isActive));
+      });
+      activeCard = nextCard;
+    };
+
+    cards.forEach((card) => {
+      card.addEventListener('pointerenter', (event) => {
+        if (event.pointerType !== 'touch' && finePointer.matches) setActiveCard(card);
+      });
+
+      card.addEventListener('pointerleave', () => {
+        if (activeCard === card && !card.matches(':focus-visible')) setActiveCard(null);
+      });
+
+      card.addEventListener('focus', () => {
+        if (card.matches(':focus-visible')) setActiveCard(card);
+      });
+
+      card.addEventListener('blur', () => {
+        if (activeCard === card && !card.matches(':hover')) setActiveCard(null);
+      });
+
+      card.addEventListener('click', (event) => {
+        if (event.detail === 0) {
+          setActiveCard(card);
+          return;
+        }
+
+        if (!finePointer.matches) setActiveCard(activeCard === card ? null : card);
+      });
+    });
+
+    root.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape' || !activeCard) return;
+      const cardToBlur = activeCard;
+      setActiveCard(null);
+      cardToBlur.blur();
+    });
+
+    document.addEventListener('pointerdown', (event) => {
+      if (activeCard && !root.contains(event.target as Node)) setActiveCard(null);
+    });
+  };
+
+  document.querySelectorAll<HTMLElement>('[data-hero-orbit]').forEach(initializeHeroOrbit);
+</script>

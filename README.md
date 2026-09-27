@@ -42,6 +42,7 @@ Content has one source of truth:
 
 - `src/data/site.json` contains the name, contact details, social links, résumé, and SEO defaults.
 - `src/content/pages` contains the Home introduction and About narrative.
+- `src/content/hero` contains the editable image cards arranged around the Home hero.
 - `src/content/timeline` contains independently reorderable timeline milestones.
 - `src/content/work` contains project metadata and Markdown case studies.
 - `src/content/bside` contains the informal B—side archive, including images and notes.
@@ -62,12 +63,13 @@ invalid entry fails before deployment.
 Before launch:
 
 1. Replace every value in `src/data/site.json`, including the placeholder email and social URLs.
-2. Rewrite the Home and About Markdown files.
-3. Replace or remove every demo timeline milestone.
-4. Replace the demo projects with real case studies and upload media through Pages CMS.
-5. Replace or remove the five starter B—side entries and upload their images.
-6. Add a résumé and social preview image if wanted; both remain hidden when empty.
-7. Set `SITE_URL` to the connected production domain in Vercel.
+2. Replace the ten Home hero placeholders with personal images and short descriptions.
+3. Rewrite the About Markdown file and update the Home greeting if needed.
+4. Replace or remove every demo timeline milestone.
+5. Replace the demo projects with real case studies and upload media through Pages CMS.
+6. Replace or remove the five starter B—side entries and upload their images.
+7. Add a résumé and social preview image if wanted; both remain hidden when empty.
+8. Set `SITE_URL` to the connected production domain in Vercel.
 
 ## Deployment
 
