@@ -17,15 +17,26 @@ interface Props {
 
 const { items, leftLabel, centerLabel, rightLabel } = Astro.props;
 const angleStep = items.length > 0 ? 360 / items.length : 0;
+const entranceHold = 650;
+const entranceStagger = 85;
+const clusterAngle = -126;
 const positionedItems = items.map((item, index) => {
-  const angle = (-108 + index * angleStep) * (Math.PI / 180);
-  const orbitRadius = 45;
+  const finalAngle = -108 + index * angleStep;
+  const startAngle = clusterAngle + (index - (items.length - 1) / 2) * 0.7;
+  const angleTravel = finalAngle - startAngle;
+  const fastAngle = startAngle + angleTravel * 0.88;
+  const stackTilt = ((index % 5) - 2) * 1.5;
 
   return {
     ...item,
     index,
-    x: 50 + Math.cos(angle) * orbitRadius,
-    y: 50 + Math.sin(angle) * orbitRadius,
+    finalAngle,
+    finalCounterAngle: -finalAngle,
+    startAngle,
+    startCounterAngle: -startAngle + stackTilt,
+    fastAngle,
+    fastCounterAngle: -fastAngle + stackTilt * 0.2,
+    entranceDelay: entranceHold + index * entranceStagger,
   };
 });
 ---
@@ -45,40 +56,42 @@ const positionedItems = items.map((item, index) => {
 
         return (
           <li
-            class={`hero-orbit-item hero-orbit-item--${item.format}`}
-            style={`--hero-x: ${item.x.toFixed(3)}%; --hero-y: ${item.y.toFixed(3)}%;`}
+            class="hero-orbit-item"
+            style={`--hero-final-angle: ${item.finalAngle.toFixed(3)}deg; --hero-final-counter-angle: ${item.finalCounterAngle.toFixed(3)}deg; --hero-start-angle: ${item.startAngle.toFixed(3)}deg; --hero-start-counter-angle: ${item.startCounterAngle.toFixed(3)}deg; --hero-fast-angle: ${item.fastAngle.toFixed(3)}deg; --hero-fast-counter-angle: ${item.fastCounterAngle.toFixed(3)}deg; --hero-entrance-delay: ${item.entranceDelay}ms;`}
           >
-            <button
-              class="hero-orbit-card"
-              type="button"
-              data-hero-card
-              data-active="false"
-              aria-pressed="false"
-              aria-labelledby={titleId}
-              aria-describedby={descriptionId}
-            >
-              <span class="hero-orbit-card-inner">
-                <span class="hero-orbit-face hero-orbit-front" aria-hidden="true">
-                  {item.image ? (
-                    <img
-                      src={item.image}
-                      alt={item.imageAlt ?? ''}
-                      loading={item.index < 2 ? 'eager' : 'lazy'}
-                      decoding="async"
-                    />
-                  ) : (
-                    <span class="hero-orbit-placeholder">
-                      <span>{String(item.index + 1).padStart(2, '0')}</span>
-                      <small>Image</small>
-                    </span>
-                  )}
+            <span class="hero-orbit-upright">
+              <button
+                class="hero-orbit-card"
+                type="button"
+                data-hero-card
+                data-active="false"
+                aria-pressed="false"
+                aria-labelledby={titleId}
+                aria-describedby={descriptionId}
+              >
+                <span class="hero-orbit-card-inner">
+                  <span class="hero-orbit-face hero-orbit-front" aria-hidden="true">
+                    {item.image ? (
+                      <img
+                        src={item.image}
+                        alt={item.imageAlt ?? ''}
+                        loading={item.index < 2 ? 'eager' : 'lazy'}
+                        decoding="async"
+                      />
+                    ) : (
+                      <span class="hero-orbit-placeholder">
+                        <span>{String(item.index + 1).padStart(2, '0')}</span>
+                        <small>Image</small>
+                      </span>
+                    )}
+                  </span>
+                  <span class="hero-orbit-face hero-orbit-back">
+                    <strong id={titleId}>{item.title}</strong>
+                    <span id={descriptionId}>{item.description}</span>
+                  </span>
                 </span>
-                <span class="hero-orbit-face hero-orbit-back">
-                  <strong id={titleId}>{item.title}</strong>
-                  <span id={descriptionId}>{item.description}</span>
-                </span>
-              </span>
-            </button>
+              </button>
+            </span>
           </li>
         );
       })}

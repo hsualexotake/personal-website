@@ -1,5 +1,5 @@
 ---
-title: "Artemis II Launch "
+title: 'Artemis II Launch '
 description: Artemis II Launch at the Airbase Office
 format: landscape
 order: 3
