@@ -228,12 +228,13 @@ select {
 
 .hero-orbit-identity {
   position: absolute;
-  z-index: 2;
+  z-index: 40;
   inset: 0;
   pointer-events: none;
 }
 
-.hero-orbit-identity > * {
+.hero-orbit-identity > *,
+.hero-orbit-center {
   position: absolute;
   top: 50%;
   margin: 0;
@@ -249,9 +250,11 @@ select {
   left: clamp(1.5rem, 8vw, 10rem);
 }
 
-.hero-orbit-identity > :nth-child(2) {
+.hero-orbit-center {
+  z-index: 20;
   left: 50%;
   font-weight: 500;
+  pointer-events: none;
   transform: translate(-50%, -50%);
 }
 
@@ -261,49 +264,55 @@ select {
   font-weight: 400;
 }
 
-.hero-orbit-list {
-  --hero-orbit-radius: calc(min(62vw, 86svh) * 0.45);
+.hero-orbit-scene {
   position: absolute;
-  z-index: 1;
   top: 50%;
   left: 50%;
   width: min(62vw, 86svh);
   height: min(62vw, 86svh);
+  cursor: grab;
+  perspective: 75rem;
+  perspective-origin: center;
+  touch-action: none;
+  transform: translate(-50%, -50%);
+  transform-style: preserve-3d;
+}
+
+.hero-orbit-list {
+  position: absolute;
+  inset: 0;
   margin: 0;
   padding: 0;
   list-style: none;
-  transform: translate(-50%, -50%);
-  animation: hero-orbit-spin 12s linear both;
+  transform-style: preserve-3d;
 }
 
 .hero-orbit-item {
   position: absolute;
-  z-index: 1;
-  top: 50%;
-  left: 50%;
+  z-index: var(--hero-static-layer);
+  top: var(--hero-static-top);
+  left: var(--hero-static-left);
   width: clamp(5rem, 6vw, 7.5rem);
-  opacity: 0;
-  transform: translate(-50%, -50%) rotate(var(--hero-final-angle))
-    translateX(var(--hero-orbit-radius)) rotate(var(--hero-final-counter-angle));
-  animation:
-    hero-orbit-stack-appear 500ms var(--ease-out) 150ms both,
-    hero-orbit-snake-unfurl 3400ms linear var(--hero-entrance-delay) both;
+  opacity: var(--hero-static-opacity);
+  transform: translate(-50%, -50%) scale(var(--hero-static-scale));
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
 }
 
 .hero-orbit-item:has(.hero-orbit-card[data-active='true']) {
-  z-index: 3;
+  z-index: 50 !important;
+  opacity: 1 !important;
 }
 
 .hero-orbit-upright {
   display: block;
   width: 100%;
-  animation: hero-orbit-counter-spin 12s linear both;
 }
 
-.hero-orbit-list:has(.hero-orbit-card:is(:hover, :focus-visible)),
-.hero-orbit-list:has(.hero-orbit-card:is(:hover, :focus-visible)) .hero-orbit-upright,
-.hero-orbit-list:has(.hero-orbit-card:is(:hover, :focus-visible)) .hero-orbit-item {
-  animation-play-state: paused;
+.hero-orbit[data-dragging='true'],
+.hero-orbit[data-dragging='true'] * {
+  cursor: grabbing !important;
+  user-select: none;
 }
 
 .hero-orbit-card {
@@ -318,6 +327,7 @@ select {
   color: inherit;
   cursor: pointer;
   perspective: 60rem;
+  filter: drop-shadow(0 0.8rem 1.4rem rgb(13 13 15 / 10%));
 }
 
 .hero-orbit-card-inner {
@@ -417,66 +427,6 @@ select {
   color: var(--color-ink);
   font-size: clamp(0.5rem, 0.62vw, 0.66rem);
   line-height: 1.35;
-}
-
-@keyframes hero-orbit-stack-appear {
-  0% {
-    opacity: 0;
-  }
-
-  100% {
-    opacity: 1;
-  }
-}
-
-@keyframes hero-orbit-snake-unfurl {
-  0%,
-  12% {
-    transform: translate(-50%, -50%) rotate(var(--hero-start-angle))
-      translateX(var(--hero-orbit-radius)) rotate(var(--hero-start-counter-angle)) scale(0.97);
-    animation-timing-function: cubic-bezier(0.5, 0, 0.75, 0.5);
-  }
-
-  76% {
-    transform: translate(-50%, -50%) rotate(var(--hero-fast-angle))
-      translateX(var(--hero-orbit-radius)) rotate(var(--hero-fast-counter-angle)) scale(1.025);
-    animation-timing-function: cubic-bezier(0.2, 0.75, 0.3, 1);
-  }
-
-  100% {
-    transform: translate(-50%, -50%) rotate(var(--hero-final-angle))
-      translateX(var(--hero-orbit-radius)) rotate(var(--hero-final-counter-angle)) scale(1);
-  }
-}
-
-@keyframes hero-orbit-spin {
-  0% {
-    transform: translate(-50%, -50%) rotate(0deg);
-  }
-
-  42% {
-    transform: translate(-50%, -50%) rotate(30.24deg);
-    animation-timing-function: cubic-bezier(0.24, 0.72, 0.3, 1);
-  }
-
-  100% {
-    transform: translate(-50%, -50%) rotate(44deg);
-  }
-}
-
-@keyframes hero-orbit-counter-spin {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  42% {
-    transform: rotate(-30.24deg);
-    animation-timing-function: cubic-bezier(0.24, 0.72, 0.3, 1);
-  }
-
-  100% {
-    transform: rotate(-44deg);
-  }
 }
 
 .page-hero h1,
@@ -1368,7 +1318,8 @@ select {
     height: 100%;
   }
 
-  .hero-orbit-identity > * {
+  .hero-orbit-identity > *,
+  .hero-orbit-center {
     font-size: clamp(0.65rem, 1.8vw, 0.82rem);
   }
 
@@ -1387,12 +1338,18 @@ select {
     right: 1rem;
   }
 
-  .hero-orbit-list {
-    --hero-orbit-radius: calc(min(88vw, 66svh) * 0.45);
+  .hero-orbit-scene {
     position: absolute;
     display: block;
     width: min(88vw, 66svh);
     height: min(88vw, 66svh);
+  }
+
+  .hero-orbit-list {
+    position: absolute;
+    display: block;
+    width: 100%;
+    height: 100%;
     margin: 0;
   }
 
@@ -1592,15 +1549,7 @@ select {
     scroll-behavior: auto;
   }
 
-  .hero-orbit-list,
-  .hero-orbit-upright {
-    animation: none !important;
-  }
-
   .hero-orbit-item {
-    opacity: 1;
-    transform: translate(-50%, -50%) rotate(var(--hero-final-angle))
-      translateX(var(--hero-orbit-radius)) rotate(var(--hero-final-counter-angle));
     animation: none !important;
   }
 

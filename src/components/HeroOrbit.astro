@@ -16,27 +16,35 @@ interface Props {
 }
 
 const { items, leftLabel, centerLabel, rightLabel } = Astro.props;
-const angleStep = items.length > 0 ? 360 / items.length : 0;
 const entranceHold = 650;
 const entranceStagger = 85;
-const clusterAngle = -126;
+const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+const settledYaw = (44 * Math.PI) / 180;
+const settledPitch = (-12 * Math.PI) / 180;
 const positionedItems = items.map((item, index) => {
-  const finalAngle = -108 + index * angleStep;
-  const startAngle = clusterAngle + (index - (items.length - 1) / 2) * 0.7;
-  const angleTravel = finalAngle - startAngle;
-  const fastAngle = startAngle + angleTravel * 0.88;
-  const stackTilt = ((index % 5) - 2) * 1.5;
+  const targetY = items.length > 0 ? -1 + (2 * (index + 0.5)) / items.length : 0;
+  const latitudeRadius = Math.sqrt(Math.max(0, 1 - targetY * targetY));
+  const longitude = index * goldenAngle - Math.PI / 2;
+  const targetX = Math.cos(longitude) * latitudeRadius;
+  const targetZ = Math.sin(longitude) * latitudeRadius;
+  const yawX = targetX * Math.cos(settledYaw) + targetZ * Math.sin(settledYaw);
+  const yawZ = -targetX * Math.sin(settledYaw) + targetZ * Math.cos(settledYaw);
+  const projectedY = targetY * Math.cos(settledPitch) - yawZ * Math.sin(settledPitch);
+  const settledDepth = targetY * Math.sin(settledPitch) + yawZ * Math.cos(settledPitch);
+  const settledDepthProgress = (settledDepth + 1) / 2;
 
   return {
     ...item,
     index,
-    finalAngle,
-    finalCounterAngle: -finalAngle,
-    startAngle,
-    startCounterAngle: -startAngle + stackTilt,
-    fastAngle,
-    fastCounterAngle: -fastAngle + stackTilt * 0.2,
+    targetX,
+    targetY,
+    targetZ,
     entranceDelay: entranceHold + index * entranceStagger,
+    staticLeft: 50 + yawX * 45,
+    staticTop: 50 + projectedY * 45,
+    staticScale: 0.82 + settledDepthProgress * 0.26,
+    staticOpacity: 0.52 + settledDepthProgress * 0.48,
+    staticLayer: settledDepth >= 0 ? 30 : 10,
   };
 });
 ---
@@ -45,68 +53,368 @@ const positionedItems = items.map((item, index) => {
   <div class="hero-orbit-stage">
     <div class="hero-orbit-identity">
       <h1 id="home-hero-title">{leftLabel}</h1>
-      <p lang="ja">{centerLabel}</p>
       <p>{rightLabel}</p>
     </div>
 
-    <ol class="hero-orbit-list" aria-label="Personal highlights">
-      {positionedItems.map((item) => {
-        const titleId = `hero-card-title-${item.id}`;
-        const descriptionId = `hero-card-description-${item.id}`;
+    <div class="hero-orbit-scene" data-hero-orbit-scene>
+      <p class="hero-orbit-center" lang="ja">
+        {centerLabel}
+      </p>
 
-        return (
-          <li
-            class="hero-orbit-item"
-            style={`--hero-final-angle: ${item.finalAngle.toFixed(3)}deg; --hero-final-counter-angle: ${item.finalCounterAngle.toFixed(3)}deg; --hero-start-angle: ${item.startAngle.toFixed(3)}deg; --hero-start-counter-angle: ${item.startCounterAngle.toFixed(3)}deg; --hero-fast-angle: ${item.fastAngle.toFixed(3)}deg; --hero-fast-counter-angle: ${item.fastCounterAngle.toFixed(3)}deg; --hero-entrance-delay: ${item.entranceDelay}ms;`}
-          >
-            <span class="hero-orbit-upright">
-              <button
-                class="hero-orbit-card"
-                type="button"
-                data-hero-card
-                data-active="false"
-                aria-pressed="false"
-                aria-labelledby={titleId}
-                aria-describedby={descriptionId}
-              >
-                <span class="hero-orbit-card-inner">
-                  <span class="hero-orbit-face hero-orbit-front" aria-hidden="true">
-                    {item.image ? (
-                      <img
-                        src={item.image}
-                        alt={item.imageAlt ?? ''}
-                        loading={item.index < 2 ? 'eager' : 'lazy'}
-                        decoding="async"
-                      />
-                    ) : (
-                      <span class="hero-orbit-placeholder">
-                        <span>{String(item.index + 1).padStart(2, '0')}</span>
-                        <small>Image</small>
-                      </span>
-                    )}
+      <ol class="hero-orbit-list" aria-label="Personal highlights">
+        {positionedItems.map((item) => {
+          const titleId = `hero-card-title-${item.id}`;
+          const descriptionId = `hero-card-description-${item.id}`;
+
+          return (
+            <li
+              class="hero-orbit-item"
+              data-hero-orbit-item
+              data-orbit-index={item.index}
+              data-target-x={item.targetX}
+              data-target-y={item.targetY}
+              data-target-z={item.targetZ}
+              data-entrance-delay={item.entranceDelay}
+              style={`--hero-static-left: ${item.staticLeft.toFixed(3)}%; --hero-static-top: ${item.staticTop.toFixed(3)}%; --hero-static-scale: ${item.staticScale.toFixed(3)}; --hero-static-opacity: ${item.staticOpacity.toFixed(3)}; --hero-static-layer: ${item.staticLayer};`}
+            >
+              <span class="hero-orbit-upright">
+                <button
+                  class="hero-orbit-card"
+                  type="button"
+                  data-hero-card
+                  data-active="false"
+                  aria-pressed="false"
+                  aria-labelledby={titleId}
+                  aria-describedby={descriptionId}
+                >
+                  <span class="hero-orbit-card-inner">
+                    <span class="hero-orbit-face hero-orbit-front" aria-hidden="true">
+                      {item.image ? (
+                        <img
+                          src={item.image}
+                          alt={item.imageAlt ?? ''}
+                          loading={item.index < 2 ? 'eager' : 'lazy'}
+                          decoding="async"
+                        />
+                      ) : (
+                        <span class="hero-orbit-placeholder">
+                          <span>{String(item.index + 1).padStart(2, '0')}</span>
+                          <small>Image</small>
+                        </span>
+                      )}
+                    </span>
+                    <span class="hero-orbit-face hero-orbit-back">
+                      <strong id={titleId}>{item.title}</strong>
+                      <span id={descriptionId}>{item.description}</span>
+                    </span>
                   </span>
-                  <span class="hero-orbit-face hero-orbit-back">
-                    <strong id={titleId}>{item.title}</strong>
-                    <span id={descriptionId}>{item.description}</span>
-                  </span>
-                </span>
-              </button>
-            </span>
-          </li>
-        );
-      })}
-    </ol>
+                </button>
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
   </div>
 </section>
 
 <script>
+  interface Vector3 {
+    x: number;
+    y: number;
+    z: number;
+  }
+
+  interface Quaternion {
+    x: number;
+    y: number;
+    z: number;
+    w: number;
+  }
+
+  interface OrbitItemState {
+    element: HTMLElement;
+    target: Vector3;
+    start: Vector3;
+    entranceDelay: number;
+    interactive: boolean;
+  }
+
+  const clamp = (value: number, minimum: number, maximum: number) =>
+    Math.min(Math.max(value, minimum), maximum);
+  const mix = (start: number, end: number, progress: number) => start + (end - start) * progress;
+
+  const normalizeVector = ({ x, y, z }: Vector3): Vector3 => {
+    const length = Math.hypot(x, y, z) || 1;
+    return { x: x / length, y: y / length, z: z / length };
+  };
+
+  const slerpVector = (start: Vector3, end: Vector3, progress: number): Vector3 => {
+    const dot = clamp(start.x * end.x + start.y * end.y + start.z * end.z, -1, 1);
+    const angle = Math.acos(dot);
+    const sine = Math.sin(angle);
+
+    if (Math.abs(sine) < 0.001) {
+      return normalizeVector({
+        x: mix(start.x, end.x, progress),
+        y: mix(start.y, end.y, progress),
+        z: mix(start.z, end.z, progress),
+      });
+    }
+
+    const startWeight = Math.sin((1 - progress) * angle) / sine;
+    const endWeight = Math.sin(progress * angle) / sine;
+    return normalizeVector({
+      x: start.x * startWeight + end.x * endWeight,
+      y: start.y * startWeight + end.y * endWeight,
+      z: start.z * startWeight + end.z * endWeight,
+    });
+  };
+
+  const normalizeQuaternion = ({ x, y, z, w }: Quaternion): Quaternion => {
+    const length = Math.hypot(x, y, z, w) || 1;
+    return { x: x / length, y: y / length, z: z / length, w: w / length };
+  };
+
+  const multiplyQuaternions = (left: Quaternion, right: Quaternion): Quaternion =>
+    normalizeQuaternion({
+      x: left.w * right.x + left.x * right.w + left.y * right.z - left.z * right.y,
+      y: left.w * right.y - left.x * right.z + left.y * right.w + left.z * right.x,
+      z: left.w * right.z + left.x * right.y - left.y * right.x + left.z * right.w,
+      w: left.w * right.w - left.x * right.x - left.y * right.y - left.z * right.z,
+    });
+
+  const quaternionFromAxisAngle = (axis: Vector3, angle: number): Quaternion => {
+    const halfAngle = angle / 2;
+    const sine = Math.sin(halfAngle);
+    return normalizeQuaternion({
+      x: axis.x * sine,
+      y: axis.y * sine,
+      z: axis.z * sine,
+      w: Math.cos(halfAngle),
+    });
+  };
+
+  const rotateVector = (quaternion: Quaternion, vector: Vector3): Vector3 => {
+    const { x, y, z, w } = quaternion;
+    const crossX = y * vector.z - z * vector.y;
+    const crossY = z * vector.x - x * vector.z;
+    const crossZ = x * vector.y - y * vector.x;
+    const secondCrossX = y * crossZ - z * crossY;
+    const secondCrossY = z * crossX - x * crossZ;
+    const secondCrossZ = x * crossY - y * crossX;
+
+    return {
+      x: vector.x + 2 * (w * crossX + secondCrossX),
+      y: vector.y + 2 * (w * crossY + secondCrossY),
+      z: vector.z + 2 * (w * crossZ + secondCrossZ),
+    };
+  };
+
+  const identityQuaternion: Quaternion = { x: 0, y: 0, z: 0, w: 1 };
+
+  const cubicBezier = (x1: number, y1: number, x2: number, y2: number) => {
+    const sample = (point: number, first: number, second: number) => {
+      const inverse = 1 - point;
+      return (
+        3 * inverse * inverse * point * first + 3 * inverse * point * point * second + point ** 3
+      );
+    };
+    const slope = (point: number, first: number, second: number) =>
+      3 * (1 - point) ** 2 * first +
+      6 * (1 - point) * point * (second - first) +
+      3 * point ** 2 * (1 - second);
+
+    return (progress: number) => {
+      const target = clamp(progress, 0, 1);
+      let point = target;
+
+      for (let iteration = 0; iteration < 5; iteration += 1) {
+        const currentSlope = slope(point, x1, x2);
+        if (Math.abs(currentSlope) < 0.0001) break;
+        point -= (sample(point, x1, x2) - target) / currentSlope;
+        point = clamp(point, 0, 1);
+      }
+
+      return sample(point, y1, y2);
+    };
+  };
+
+  const entranceEase = cubicBezier(0.5, 0, 0.75, 0.5);
+  const entranceSettleEase = cubicBezier(0.2, 0.75, 0.3, 1);
+  const rotationSettleEase = cubicBezier(0.24, 0.72, 0.3, 1);
+  const continuousYawDegreesPerSecond = 3;
+
   const initializeHeroOrbit = (root: HTMLElement) => {
     if (root.dataset.enhanced === 'true') return;
 
     root.dataset.enhanced = 'true';
+    const scene = root.querySelector<HTMLElement>('[data-hero-orbit-scene]');
     const cards = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-hero-card]'));
+    const orbitItems = Array.from(
+      root.querySelectorAll<HTMLElement>('[data-hero-orbit-item]'),
+      (element): OrbitItemState => {
+        const index = Number(element.dataset.orbitIndex);
+        const centerIndex = (cards.length - 1) / 2;
+        return {
+          element,
+          target: normalizeVector({
+            x: Number(element.dataset.targetX),
+            y: Number(element.dataset.targetY),
+            z: Number(element.dataset.targetZ),
+          }),
+          start: normalizeVector({
+            x: -0.72 + ((index % 5) - 2) * 0.018,
+            y: -0.48 + (index - centerIndex) * 0.008,
+            z: -0.5 + ((index % 3) - 1) * 0.015,
+          }),
+          entranceDelay: Number(element.dataset.entranceDelay),
+          interactive: true,
+        };
+      },
+    );
+    if (!scene || orbitItems.length === 0) return;
+
     const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     let activeCard: HTMLButtonElement | null = null;
+    let timelineElapsed = reducedMotion.matches ? 12_000 : 0;
+    let lastFrameTime = performance.now();
+    let frameId: number | null = null;
+    let orbitRadius = 0;
+    let manualOrientation: Quaternion = identityQuaternion;
+    let frozenAutomaticOrientation: Quaternion | null = null;
+    let yawVelocity = 0;
+    let pitchVelocity = 0;
+    let inertiaElapsed = 0;
+    let dragCandidate = false;
+    let dragging = false;
+    let dragPointerId: number | null = null;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let lastPointerX = 0;
+    let lastPointerY = 0;
+    let lastPointerTime = 0;
+    let suppressClick = false;
+
+    const getAutomaticOrientation = () => {
+      if (frozenAutomaticOrientation !== null) return frozenAutomaticOrientation;
+      const progress = clamp(timelineElapsed / 12_000, 0, 1);
+      const entranceYaw =
+        progress <= 0.42
+          ? mix(0, 30.24, progress / 0.42)
+          : mix(30.24, 44, rotationSettleEase((progress - 0.42) / 0.58));
+      const continuousYaw =
+        ((Math.max(0, timelineElapsed - 12_000) / 1_000) * continuousYawDegreesPerSecond) % 360;
+      const yaw = entranceYaw + continuousYaw;
+      const pitch = -12 * (entranceYaw / 44);
+      const yawQuaternion = quaternionFromAxisAngle({ x: 0, y: 1, z: 0 }, (yaw * Math.PI) / 180);
+      const pitchQuaternion = quaternionFromAxisAngle(
+        { x: 1, y: 0, z: 0 },
+        (pitch * Math.PI) / 180,
+      );
+
+      return multiplyQuaternions(pitchQuaternion, yawQuaternion);
+    };
+
+    const getItemVector = (item: OrbitItemState, entranceProgress: number) => {
+      if (entranceProgress <= 0.12) return item.start;
+      if (entranceProgress <= 0.76) {
+        const progress = entranceEase((entranceProgress - 0.12) / 0.64) * 1.05;
+        return slerpVector(item.start, item.target, progress);
+      }
+
+      const settleProgress = entranceSettleEase((entranceProgress - 0.76) / 0.24);
+      return slerpVector(item.start, item.target, mix(1.05, 1, settleProgress));
+    };
+
+    const renderOrbit = () => {
+      const orientation = multiplyQuaternions(manualOrientation, getAutomaticOrientation());
+
+      orbitItems.forEach((item) => {
+        const entranceProgress = clamp((timelineElapsed - item.entranceDelay) / 3_400, 0, 1);
+        const position = rotateVector(orientation, getItemVector(item, entranceProgress));
+        const depth = position.z;
+        const depthProgress = (depth + 1) / 2;
+        const x = position.x * orbitRadius;
+        const y = position.y * orbitRadius;
+        const z = depth * orbitRadius * 0.16;
+        const scale = 0.82 + depthProgress * 0.26;
+        const revealProgress = clamp((entranceProgress - 0.12) / 0.64, 0, 1);
+        const entranceOpacity = revealProgress ** 2;
+        const opacity = entranceOpacity * (0.52 + depthProgress * 0.48);
+        const isInteractive = revealProgress >= 1;
+
+        if (item.interactive !== isInteractive) {
+          item.element.inert = !isInteractive;
+          item.interactive = isInteractive;
+        }
+
+        item.element.style.left = '50%';
+        item.element.style.top = '50%';
+        item.element.style.zIndex = depth >= 0 ? '30' : '10';
+        item.element.style.opacity = opacity.toFixed(3);
+        item.element.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, ${z.toFixed(2)}px) translate(-50%, -50%) scale(${scale.toFixed(3)})`;
+      });
+    };
+
+    const scheduleFrame = () => {
+      if (frameId !== null) return;
+      frameId = window.requestAnimationFrame(updateOrbit);
+    };
+
+    const rotateManually = (yaw: number, pitch: number) => {
+      const yawQuaternion = quaternionFromAxisAngle({ x: 0, y: 1, z: 0 }, (yaw * Math.PI) / 180);
+      const pitchQuaternion = quaternionFromAxisAngle(
+        { x: 1, y: 0, z: 0 },
+        (pitch * Math.PI) / 180,
+      );
+      const deltaOrientation = multiplyQuaternions(pitchQuaternion, yawQuaternion);
+      manualOrientation = multiplyQuaternions(deltaOrientation, manualOrientation);
+    };
+
+    const updateOrbit = (time: number) => {
+      frameId = null;
+      const elapsed = Math.max(0, time - lastFrameTime);
+      lastFrameTime = time;
+      const cardPaused =
+        !dragging &&
+        Boolean(root.querySelector('.hero-orbit-card:hover, .hero-orbit-card:focus-visible'));
+
+      if (!cardPaused && !dragging && !reducedMotion.matches) {
+        timelineElapsed += elapsed;
+      }
+
+      if (!dragging && (yawVelocity !== 0 || pitchVelocity !== 0)) {
+        rotateManually(yawVelocity * elapsed, pitchVelocity * elapsed);
+        const decay = Math.exp(-elapsed / 220);
+        yawVelocity *= decay;
+        pitchVelocity *= decay;
+        inertiaElapsed += elapsed;
+
+        if (Math.hypot(yawVelocity, pitchVelocity) < 0.002 || inertiaElapsed >= 700) {
+          yawVelocity = 0;
+          pitchVelocity = 0;
+        }
+      }
+
+      renderOrbit();
+
+      if (
+        (!reducedMotion.matches && !cardPaused) ||
+        yawVelocity !== 0 ||
+        pitchVelocity !== 0 ||
+        dragging
+      ) {
+        scheduleFrame();
+      }
+    };
+
+    const measureOrbit = () => {
+      const bounds = scene.getBoundingClientRect();
+      orbitRadius = Math.min(bounds.width, bounds.height) * 0.45;
+      renderOrbit();
+    };
 
     const setActiveCard = (nextCard: HTMLButtonElement | null) => {
       cards.forEach((card) => {
@@ -115,6 +423,7 @@ const positionedItems = items.map((item, index) => {
         card.setAttribute('aria-pressed', String(isActive));
       });
       activeCard = nextCard;
+      scheduleFrame();
     };
 
     cards.forEach((card) => {
@@ -154,6 +463,107 @@ const positionedItems = items.map((item, index) => {
     document.addEventListener('pointerdown', (event) => {
       if (activeCard && !root.contains(event.target as Node)) setActiveCard(null);
     });
+
+    scene.addEventListener('pointerdown', (event) => {
+      if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return;
+
+      dragCandidate = true;
+      dragging = false;
+      dragPointerId = event.pointerId;
+      dragStartX = event.clientX;
+      dragStartY = event.clientY;
+      lastPointerX = event.clientX;
+      lastPointerY = event.clientY;
+      lastPointerTime = event.timeStamp;
+      yawVelocity = 0;
+      pitchVelocity = 0;
+      scheduleFrame();
+    });
+
+    scene.addEventListener('pointermove', (event) => {
+      if (!dragCandidate || event.pointerId !== dragPointerId) return;
+
+      const horizontalTravel = event.clientX - dragStartX;
+      const verticalTravel = event.clientY - dragStartY;
+
+      if (!dragging) {
+        if (Math.hypot(horizontalTravel, verticalTravel) < 6) return;
+
+        dragging = true;
+        frozenAutomaticOrientation = getAutomaticOrientation();
+        setActiveCard(null);
+        scene.setPointerCapture(event.pointerId);
+        root.dataset.dragging = 'true';
+      }
+
+      event.preventDefault();
+      const yawPerPixel = 180 / Math.max(scene.clientWidth, 1);
+      const pitchPerPixel = 180 / Math.max(scene.clientHeight, 1);
+      const pointerDeltaX = event.clientX - lastPointerX;
+      const pointerDeltaY = event.clientY - lastPointerY;
+      const yawDelta = pointerDeltaX * yawPerPixel;
+      const pitchDelta = -pointerDeltaY * pitchPerPixel;
+      const sampleDuration = Math.max(event.timeStamp - lastPointerTime, 1);
+
+      rotateManually(yawDelta, pitchDelta);
+      yawVelocity = clamp(yawDelta / sampleDuration, -0.35, 0.35);
+      pitchVelocity = clamp(pitchDelta / sampleDuration, -0.35, 0.35);
+      lastPointerX = event.clientX;
+      lastPointerY = event.clientY;
+      lastPointerTime = event.timeStamp;
+      renderOrbit();
+      scheduleFrame();
+    });
+
+    const finishDrag = (event: PointerEvent) => {
+      if (!dragCandidate || event.pointerId !== dragPointerId) return;
+
+      if (dragging) {
+        suppressClick = true;
+        window.setTimeout(() => {
+          suppressClick = false;
+        });
+        if (event.timeStamp - lastPointerTime > 80 || reducedMotion.matches) {
+          yawVelocity = 0;
+          pitchVelocity = 0;
+        }
+        inertiaElapsed = 0;
+      }
+
+      dragCandidate = false;
+      dragging = false;
+      dragPointerId = null;
+      frozenAutomaticOrientation = null;
+      delete root.dataset.dragging;
+      scheduleFrame();
+    };
+
+    scene.addEventListener('pointerup', finishDrag);
+    scene.addEventListener('pointercancel', finishDrag);
+    scene.addEventListener(
+      'click',
+      (event) => {
+        if (!suppressClick) return;
+        event.preventDefault();
+        event.stopPropagation();
+        suppressClick = false;
+      },
+      true,
+    );
+
+    reducedMotion.addEventListener('change', () => {
+      if (reducedMotion.matches) {
+        timelineElapsed = 12_000;
+        yawVelocity = 0;
+        pitchVelocity = 0;
+      }
+      scheduleFrame();
+    });
+
+    const resizeObserver = new ResizeObserver(measureOrbit);
+    resizeObserver.observe(scene);
+    measureOrbit();
+    scheduleFrame();
   };
 
   document.querySelectorAll<HTMLElement>('[data-hero-orbit]').forEach(initializeHeroOrbit);
