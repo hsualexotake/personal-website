@@ -1,0 +1,849 @@
+---
+interface Props {
+  name: string;
+  location: string;
+}
+
+const { name, location } = Astro.props;
+
+const clusters = [
+  {
+    className: 'poster-cluster-curiosity',
+    lines: [
+      'Curiosity',
+      'Curiosity',
+      'Curiosity becomes',
+      'Becomes a question',
+      'A question',
+      'A direction',
+    ],
+  },
+  {
+    className: 'poster-cluster-ideas',
+    lines: [
+      'Ideas',
+      'Ideas take',
+      'Ideas take shape',
+      'Take shape',
+      'Shape into',
+      'Objects',
+      'Systems',
+      'Stories',
+    ],
+  },
+  {
+    className: 'poster-cluster-language',
+    lines: [
+      'Design',
+      'Design',
+      'Design & code',
+      'Are a language',
+      'A language for',
+      'Making meaning',
+    ],
+  },
+  {
+    className: 'poster-cluster-learning',
+    lines: ['Always', 'Always learning', 'Learning in public', 'In public', 'From New York'],
+  },
+];
+
+const bitmapGlyphs: Record<string, string[]> = {
+  A: [
+    '0011100',
+    '0100010',
+    '1000001',
+    '1000001',
+    '1000001',
+    '1111111',
+    '1000001',
+    '1000001',
+    '1000001',
+    '1000001',
+    '1000001',
+  ],
+  H: [
+    '1000001',
+    '1000001',
+    '1000001',
+    '1000001',
+    '1000001',
+    '1111111',
+    '1000001',
+    '1000001',
+    '1000001',
+    '1000001',
+    '1000001',
+  ],
+  O: [
+    '0011100',
+    '0100010',
+    '1000001',
+    '1000001',
+    '1000001',
+    '1000001',
+    '1000001',
+    '1000001',
+    '1000001',
+    '0100010',
+    '0011100',
+  ],
+  a: [
+    '0000000',
+    '0000000',
+    '0000000',
+    '0000000',
+    '0011100',
+    '0100010',
+    '0000010',
+    '0011110',
+    '0100010',
+    '0100010',
+    '0011111',
+  ],
+  e: [
+    '0000000',
+    '0000000',
+    '0000000',
+    '0000000',
+    '0011100',
+    '0100010',
+    '1000001',
+    '1111111',
+    '1000000',
+    '0100000',
+    '0011111',
+  ],
+  h: [
+    '1000000',
+    '1000000',
+    '1000000',
+    '1000000',
+    '1011100',
+    '1100001',
+    '1000001',
+    '1000001',
+    '1000001',
+    '1000001',
+    '1000001',
+  ],
+  k: [
+    '1000000',
+    '1000000',
+    '1000000',
+    '1000000',
+    '1000010',
+    '1000100',
+    '1001000',
+    '1110000',
+    '1001000',
+    '1000100',
+    '1000010',
+  ],
+  l: [
+    '0010000',
+    '0010000',
+    '0010000',
+    '0010000',
+    '0010000',
+    '0010000',
+    '0010000',
+    '0010000',
+    '0010000',
+    '0010010',
+    '0001100',
+  ],
+  o: [
+    '0000000',
+    '0000000',
+    '0000000',
+    '0000000',
+    '0011100',
+    '0100010',
+    '1000001',
+    '1000001',
+    '1000001',
+    '0100010',
+    '0011100',
+  ],
+  s: [
+    '0000000',
+    '0000000',
+    '0000000',
+    '0000000',
+    '0011110',
+    '0100000',
+    '1000000',
+    '0111100',
+    '0000010',
+    '0000010',
+    '0111100',
+  ],
+  t: [
+    '0001000',
+    '0001000',
+    '0001000',
+    '0111110',
+    '0001000',
+    '0001000',
+    '0001000',
+    '0001000',
+    '0001000',
+    '0001010',
+    '0000100',
+  ],
+  u: [
+    '0000000',
+    '0000000',
+    '0000000',
+    '0000000',
+    '1000001',
+    '1000001',
+    '1000001',
+    '1000001',
+    '1000001',
+    '0100001',
+    '0011111',
+  ],
+  x: [
+    '0000000',
+    '0000000',
+    '0000000',
+    '0000000',
+    '1000001',
+    '0100010',
+    '0010100',
+    '0001000',
+    '0010100',
+    '0100010',
+    '1000001',
+  ],
+};
+
+interface BitmapPixel {
+  x: number;
+  y: number;
+}
+
+const buildBitmap = (value: string) => {
+  const pixels: BitmapPixel[] = [];
+  let cursor = 0;
+
+  for (const character of value) {
+    if (character === ' ') {
+      cursor += 4;
+      continue;
+    }
+
+    const glyph = bitmapGlyphs[character];
+    if (!glyph) {
+      cursor += 8;
+      continue;
+    }
+
+    glyph.forEach((row, y) => {
+      Array.from(row).forEach((cell, x) => {
+        if (cell === '1') pixels.push({ x: cursor + x, y });
+      });
+    });
+    cursor += 8;
+  }
+
+  return { pixels, width: Math.max(cursor - 1, 1), height: 11 };
+};
+
+const splitBitmapCells = (bitmap: ReturnType<typeof buildBitmap>) => ({
+  ...bitmap,
+  pixels: bitmap.pixels.flatMap((pixel) => [
+    { x: pixel.x, y: pixel.y },
+    { x: pixel.x + 0.5, y: pixel.y },
+    { x: pixel.x, y: pixel.y + 0.5 },
+    { x: pixel.x + 0.5, y: pixel.y + 0.5 },
+  ]),
+});
+
+const desktopWordmark = splitBitmapCells(buildBitmap(name));
+const mobileWordmarks = ['Alex Otake', 'Hsu'].map((word) => splitBitmapCells(buildBitmap(word)));
+// A slight overlap prevents sub-pixel seams in the solid, unhovered wordmark.
+const bitmapCellSize = 0.505;
+---
+
+<section class="poster-hero" data-poster-hero aria-labelledby="poster-hero-title">
+  <div class="poster-hero-noise" aria-hidden="true"></div>
+
+  <div class="visually-hidden">
+    <h1 id="poster-hero-title">{name}</h1>
+    <p>
+      Curiosity becomes a question and a direction. Ideas take shape as objects, systems, and
+      stories. Design and code are a language for making meaning.
+    </p>
+  </div>
+
+  <p class="poster-side-note" aria-hidden="true">
+    NYC / ET
+  </p>
+
+  <div class="poster-composition" aria-hidden="true">
+    {clusters.map(({ className, lines }, clusterIndex) => (
+      <div
+        class:list={['poster-cluster', className]}
+        data-poster-cluster
+        data-depth={clusterIndex + 1}
+      >
+        <div class="poster-cluster-inner">
+          {lines.map((line, lineIndex) => (
+            <span style={`--line-index: ${lineIndex}`}>{line}</span>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <div class="poster-meta" aria-hidden="true">
+    <span>Thoughtful work</span>
+    <b>+</b>
+    <span>Evolving ideas</span>
+    <b>+</b>
+    <span>{location}</span>
+  </div>
+
+  <nav class="poster-links" aria-label="Explore the portfolio">
+    <a href="/work">
+      Work <span aria-hidden="true">↗</span>
+    </a>
+    <a href="/about">
+      About <span aria-hidden="true">↗</span>
+    </a>
+  </nav>
+
+  <a class="poster-scroll" href="#timeline">
+    <span>Explore</span>
+    <span aria-hidden="true">↓</span>
+  </a>
+
+  <div class="poster-wordmark" aria-hidden="true">
+    <svg
+      class="poster-wordmark-desktop"
+      viewBox={`0 0 ${desktopWordmark.width} ${desktopWordmark.height}`}
+      preserveAspectRatio="none"
+      role="presentation"
+    >
+      {desktopWordmark.pixels.map((pixel) => (
+        <rect
+          x={pixel.x}
+          y={pixel.y}
+          width={bitmapCellSize}
+          height={bitmapCellSize}
+          data-cell-x={pixel.x + bitmapCellSize / 2}
+          data-cell-y={pixel.y + bitmapCellSize / 2}
+        />
+      ))}
+    </svg>
+
+    <div class="poster-wordmark-mobile">
+      {mobileWordmarks.map((wordmark) => (
+        <svg
+          viewBox={`0 0 ${wordmark.width} ${wordmark.height}`}
+          preserveAspectRatio="none"
+          role="presentation"
+        >
+          {wordmark.pixels.map((pixel) => (
+            <rect
+              x={pixel.x}
+              y={pixel.y}
+              width={bitmapCellSize}
+              height={bitmapCellSize}
+              data-cell-x={pixel.x + bitmapCellSize / 2}
+              data-cell-y={pixel.y + bitmapCellSize / 2}
+            />
+          ))}
+        </svg>
+      ))}
+    </div>
+  </div>
+</section>
+
+<script>
+  const initializePosterHero = (root: HTMLElement) => {
+    if (root.dataset.enhanced === 'true') return;
+    root.dataset.enhanced = 'true';
+
+    const clusters = Array.from(root.querySelectorAll<HTMLElement>('[data-poster-cluster]'));
+    const wordmark = root.querySelector<HTMLElement>('.poster-wordmark');
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+    if (clusters.length === 0 || reducedMotion.matches) return;
+
+    let frameId = 0;
+    let pointerX = 0;
+    let pointerY = 0;
+
+    const render = () => {
+      clusters.forEach((cluster, index) => {
+        const depth = Number(cluster.dataset.depth ?? index + 1);
+        const direction = index % 2 === 0 ? 1 : -1;
+        const x = pointerX * depth * 1.6 * direction;
+        const y = pointerY * depth * 0.9;
+        cluster.style.setProperty('--shift-x', `${x.toFixed(2)}px`);
+        cluster.style.setProperty('--shift-y', `${y.toFixed(2)}px`);
+      });
+      frameId = 0;
+    };
+
+    const requestRender = () => {
+      if (frameId === 0) frameId = window.requestAnimationFrame(render);
+    };
+
+    root.addEventListener('pointermove', (event) => {
+      const bounds = root.getBoundingClientRect();
+      pointerX = (event.clientX - bounds.left) / bounds.width - 0.5;
+      pointerY = (event.clientY - bounds.top) / bounds.height - 0.5;
+      requestRender();
+    });
+
+    root.addEventListener('pointerleave', () => {
+      pointerX = 0;
+      pointerY = 0;
+      requestRender();
+    });
+
+    if (wordmark && finePointer.matches) {
+      const wordmarkGroups = Array.from(wordmark.querySelectorAll<SVGSVGElement>('svg')).map(
+        (svg) => ({
+          svg,
+          cells: Array.from(svg.querySelectorAll<SVGRectElement>('rect')).map((element) => ({
+            element,
+            x: Number(element.dataset.cellX),
+            y: Number(element.dataset.cellY),
+          })),
+        }),
+      );
+      let wordmarkFrameId = 0;
+      let cursorX = 0;
+      let cursorY = 0;
+
+      const renderWordmarkLens = () => {
+        wordmarkGroups.forEach(({ svg, cells }) => {
+          const bounds = svg.getBoundingClientRect();
+          const viewBox = svg.viewBox.baseVal;
+          if (bounds.width === 0 || bounds.height === 0 || viewBox.width === 0) return;
+
+          const outerRadius = Math.min(300, Math.max(160, bounds.width * 0.14));
+          const innerRadius = outerRadius * 0.16;
+
+          cells.forEach((cell) => {
+            const cellX = bounds.left + ((cell.x - viewBox.x) / viewBox.width) * bounds.width;
+            const cellY = bounds.top + ((cell.y - viewBox.y) / viewBox.height) * bounds.height;
+            const distance = Math.hypot(cursorX - cellX, cursorY - cellY);
+            const linearInfluence = Math.min(
+              Math.max(1 - (distance - innerRadius) / (outerRadius - innerRadius), 0),
+              1,
+            );
+            const influence = linearInfluence * linearInfluence * (3 - 2 * linearInfluence);
+            const radius = influence * 0.252;
+            const scale = 1 - influence * 0.09;
+
+            cell.element.style.setProperty('--cell-radius', `${radius.toFixed(3)}px`);
+            cell.element.style.setProperty('--cell-scale', scale.toFixed(3));
+          });
+        });
+        wordmarkFrameId = 0;
+      };
+
+      const requestWordmarkRender = () => {
+        if (wordmarkFrameId === 0) {
+          wordmarkFrameId = window.requestAnimationFrame(renderWordmarkLens);
+        }
+      };
+
+      wordmark.addEventListener('pointermove', (event) => {
+        cursorX = event.clientX;
+        cursorY = event.clientY;
+        requestWordmarkRender();
+      });
+
+      wordmark.addEventListener('pointerleave', () => {
+        wordmarkGroups.forEach(({ cells }) => {
+          cells.forEach(({ element }) => {
+            element.style.removeProperty('--cell-radius');
+            element.style.removeProperty('--cell-scale');
+          });
+        });
+      });
+    }
+  };
+
+  document.querySelectorAll<HTMLElement>('[data-poster-hero]').forEach(initializePosterHero);
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll<HTMLElement>('[data-poster-hero]').forEach(initializePosterHero);
+  });
+</script>
+
+<style>
+  .poster-hero {
+    --poster-white: #f1f0ec;
+    position: relative;
+    height: 100svh;
+    min-height: 42rem;
+    overflow: hidden;
+    background: #050505;
+    color: var(--poster-white);
+    isolation: isolate;
+  }
+
+  .poster-hero-noise {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.28'/%3E%3C/svg%3E");
+    opacity: 0.055;
+    pointer-events: none;
+  }
+
+  .poster-composition {
+    position: absolute;
+    inset: 0;
+  }
+
+  .poster-cluster {
+    --shift-x: 0px;
+    --shift-y: 0px;
+    position: absolute;
+    font-size: clamp(1.55rem, 1.85vw, 2.35rem);
+    font-weight: 430;
+    letter-spacing: -0.055em;
+    line-height: 0.96;
+    white-space: nowrap;
+    transform: translate3d(var(--shift-x), var(--shift-y), 0);
+    transition: transform 900ms cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
+  }
+
+  .poster-cluster-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    animation: poster-drift 9s ease-in-out infinite alternate;
+  }
+
+  .poster-cluster span {
+    display: block;
+    opacity: 0;
+    transform: translateY(0.72em);
+    animation: poster-line-in 700ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation-delay: calc(180ms + var(--line-index) * 45ms);
+  }
+
+  .poster-cluster-curiosity {
+    top: 33%;
+    left: 23.5%;
+  }
+
+  .poster-cluster-ideas {
+    top: 42%;
+    left: 41%;
+  }
+
+  .poster-cluster-ideas .poster-cluster-inner {
+    animation-delay: -2s;
+  }
+
+  .poster-cluster-language {
+    top: 23%;
+    left: 60.5%;
+  }
+
+  .poster-cluster-language .poster-cluster-inner {
+    animation-delay: -4s;
+  }
+
+  .poster-cluster-learning {
+    top: 39%;
+    left: 82.5%;
+  }
+
+  .poster-cluster-learning .poster-cluster-inner {
+    animation-delay: -6s;
+  }
+
+  .poster-side-note,
+  .poster-meta,
+  .poster-links,
+  .poster-scroll {
+    position: absolute;
+    z-index: 2;
+    margin: 0;
+    font-size: clamp(0.68rem, 0.72vw, 0.82rem);
+    letter-spacing: 0.04em;
+    line-height: 1.1;
+    text-transform: uppercase;
+  }
+
+  .poster-side-note {
+    top: 48%;
+    left: clamp(1.25rem, 3vw, 3.5rem);
+  }
+
+  .poster-meta {
+    right: 25%;
+    bottom: clamp(11rem, 27vh, 20rem);
+    display: flex;
+    gap: clamp(0.8rem, 2.1vw, 2.5rem);
+    align-items: center;
+    color: rgb(241 240 236 / 68%);
+  }
+
+  .poster-meta b {
+    color: var(--poster-white);
+    font-weight: 500;
+  }
+
+  .poster-links {
+    right: clamp(1.25rem, 3vw, 3.5rem);
+    bottom: clamp(11rem, 27vh, 20rem);
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  .poster-links a,
+  .poster-scroll {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .poster-links a {
+    display: inline-flex;
+    gap: 0.35rem;
+    align-items: center;
+  }
+
+  .poster-links a span {
+    transition: transform 180ms ease;
+  }
+
+  .poster-links a:hover span {
+    transform: translate(0.15rem, -0.15rem);
+  }
+
+  .poster-scroll {
+    bottom: clamp(11rem, 27vh, 20rem);
+    left: clamp(1.25rem, 3vw, 3.5rem);
+    display: flex;
+    gap: 0.65rem;
+    align-items: center;
+  }
+
+  .poster-scroll span:last-child {
+    transition: transform 180ms ease;
+  }
+
+  .poster-scroll:hover span:last-child {
+    transform: translateY(0.2rem);
+  }
+
+  .poster-wordmark {
+    position: absolute;
+    z-index: 1;
+    right: clamp(1.25rem, 3vw, 3.5rem);
+    bottom: clamp(1.25rem, 2.8vh, 2.5rem);
+    left: clamp(1.25rem, 3vw, 3.5rem);
+    color: var(--poster-white);
+    animation: poster-wordmark-in 1.1s 480ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .poster-wordmark svg {
+    display: block;
+    overflow: visible;
+    fill: currentColor;
+    shape-rendering: crispEdges;
+  }
+
+  .poster-wordmark rect {
+    rx: var(--cell-radius, 0px);
+    ry: var(--cell-radius, 0px);
+    transform-box: fill-box;
+    transform-origin: center;
+    transform: scale(var(--cell-scale, 1));
+    transition:
+      rx 220ms cubic-bezier(0.16, 1, 0.3, 1),
+      ry 220ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .poster-wordmark-desktop {
+    width: 100%;
+    height: clamp(10rem, 22vh, 18rem);
+  }
+
+  .poster-wordmark-mobile {
+    display: none;
+  }
+
+  @keyframes poster-line-in {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes poster-drift {
+    from {
+      transform: translateY(-0.18rem);
+    }
+    to {
+      transform: translateY(0.18rem);
+    }
+  }
+
+  @keyframes poster-wordmark-in {
+    from {
+      clip-path: inset(0 100% 0 0);
+      opacity: 0;
+    }
+    to {
+      clip-path: inset(0);
+      opacity: 1;
+    }
+  }
+
+  @media (max-width: 56rem) {
+    .poster-cluster {
+      font-size: clamp(1.35rem, 4.5vw, 2rem);
+    }
+
+    .poster-cluster-curiosity {
+      top: 30%;
+      left: 8%;
+    }
+
+    .poster-cluster-ideas {
+      top: 44%;
+      left: 36%;
+    }
+
+    .poster-cluster-language {
+      top: 17%;
+      left: 52%;
+    }
+
+    .poster-cluster-learning {
+      top: 40%;
+      left: 78%;
+    }
+
+    .poster-side-note {
+      top: 53%;
+    }
+
+    .poster-meta,
+    .poster-links,
+    .poster-scroll {
+      bottom: clamp(9rem, 25vh, 14rem);
+    }
+  }
+
+  @media (max-width: 38rem) {
+    .poster-hero {
+      min-height: 44rem;
+    }
+
+    .poster-cluster {
+      font-size: clamp(1.18rem, 5.7vw, 1.65rem);
+      line-height: 0.98;
+    }
+
+    .poster-cluster-curiosity {
+      top: 28%;
+      left: 5%;
+    }
+
+    .poster-cluster-ideas {
+      top: 42%;
+      left: 35%;
+    }
+
+    .poster-cluster-language {
+      top: 14%;
+      left: 48%;
+    }
+
+    .poster-cluster-learning {
+      top: 54%;
+      left: 70%;
+    }
+
+    .poster-side-note {
+      top: 55%;
+    }
+
+    .poster-meta {
+      display: none;
+    }
+
+    .poster-links,
+    .poster-scroll {
+      bottom: 14rem;
+    }
+
+    .poster-links {
+      gap: 0.9rem;
+    }
+
+    .poster-wordmark {
+      right: 1.25rem;
+      bottom: 1.25rem;
+      left: 1.25rem;
+    }
+
+    .poster-wordmark .poster-wordmark-desktop {
+      display: none;
+    }
+
+    .poster-wordmark-mobile {
+      display: flex;
+      height: 12rem;
+      flex-direction: column;
+      gap: 0.5rem;
+      align-items: flex-start;
+    }
+
+    .poster-wordmark-mobile svg:first-child {
+      width: 100%;
+      height: 7rem;
+      flex: 0 0 7rem;
+      overflow: hidden;
+    }
+
+    .poster-wordmark-mobile svg:last-child {
+      width: 38%;
+      height: 4.5rem;
+      flex: 0 0 4.5rem;
+      align-self: flex-end;
+      overflow: hidden;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .poster-cluster,
+    .poster-cluster-inner,
+    .poster-cluster span,
+    .poster-links a span,
+    .poster-scroll span:last-child {
+      animation: none;
+      transition: none;
+    }
+
+    .poster-wordmark {
+      animation: none;
+    }
+
+    .poster-wordmark rect {
+      transition: none;
+    }
+
+    .poster-cluster span {
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>

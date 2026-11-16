@@ -1,6 +1,6 @@
 ---
 import { getCollection, getEntry } from 'astro:content';
-import HeroOrbit, { type HeroOrbitItem } from '../components/HeroOrbit.astro';
+import PosterHero from '../components/PosterHero.astro';
 import Timeline, { type TimelineItem } from '../components/Timeline';
 import WorkCard from '../components/WorkCard.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
@@ -9,15 +9,6 @@ import { site } from '../lib/site';
 const home = await getEntry('pages', 'home');
 if (!home) throw new Error('Missing src/content/pages/home.md');
 
-const heroEntries = (await getCollection('hero')).sort((a, b) => a.data.order - b.data.order);
-const heroItems: HeroOrbitItem[] = heroEntries.map(({ id, data }) => ({
-  id,
-  title: data.title,
-  description: data.description,
-  image: data.image,
-  imageAlt: data.imageAlt,
-  format: data.format,
-}));
 const timelineEntries = (await getCollection('timeline')).sort(
   (a, b) => a.data.order - b.data.order,
 );
@@ -37,12 +28,7 @@ const projects = (await getCollection('work', ({ data }) => !data.draft && data.
 ---
 
 <BaseLayout title={site.displayName} description={home.data.description}>
-  <HeroOrbit
-    items={heroItems}
-    leftLabel={site.displayName}
-    centerLabel={home.data.heroGreeting ?? '大竹'}
-    rightLabel={site.location}
-  />
+  <PosterHero name={site.displayName} location={site.location} />
 
   <section class="timeline-section shell" id="timeline" aria-labelledby="timeline-title">
     <div class="section-heading">
