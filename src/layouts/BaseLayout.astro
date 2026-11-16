@@ -10,6 +10,8 @@ interface Props {
   description?: string;
   image?: string;
   noindex?: boolean;
+  pageClass?: string;
+  themeColor?: string;
 }
 
 const {
@@ -17,6 +19,8 @@ const {
   description = site.description,
   image = site.socialImage,
   noindex = false,
+  pageClass,
+  themeColor = '#ffffff',
 } = Astro.props;
 const pageTitle = title === site.displayName ? title : `${title} — ${site.displayName}`;
 const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url).toString();
@@ -30,7 +34,7 @@ const isHome = Astro.url.pathname === '/';
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
-    <meta name="theme-color" content="#ffffff" />
+    <meta name="theme-color" content={themeColor} />
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
@@ -48,7 +52,7 @@ const isHome = Astro.url.pathname === '/';
     {socialImage && <meta name="twitter:image" content={socialImage} />}
     <slot name="head" />
   </head>
-  <body class:list={{ 'home-page': isHome }}>
+  <body class:list={[{ 'home-page': isHome }, pageClass]}>
     <a class="skip-link" href="#main-content">
       Skip to content
     </a>
