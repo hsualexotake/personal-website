@@ -1,12 +1,28 @@
 ---
 const pathname = Astro.url.pathname;
-const isCurrent = pathname === '/b-side' || pathname.startsWith('/b-side/');
+const navItems = [
+  { href: '/work', label: 'Work' },
+  { href: '/b-side', label: 'B-side' },
+  { href: '/about', label: 'About' },
+];
 ---
 
 <header class="site-header">
   <nav class="site-nav" aria-label="Primary navigation">
-    <a href="/b-side" aria-current={isCurrent ? 'page' : undefined}>
-      B—side
-    </a>
+    {navItems.map(({ href, label }) => {
+      const isCurrent = pathname === href || pathname.startsWith(`${href}/`);
+
+      return (
+        <a href={href} aria-current={isCurrent ? 'page' : undefined}>
+          <span class="site-nav-bracket" aria-hidden="true">
+            [
+          </span>
+          <span class="site-nav-label">{label}</span>
+          <span class="site-nav-bracket" aria-hidden="true">
+            ]
+          </span>
+        </a>
+      );
+    })}
   </nav>
 </header>
