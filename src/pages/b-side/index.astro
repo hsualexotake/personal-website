@@ -1,6 +1,5 @@
 ---
 import { getCollection, getEntry, render } from 'astro:content';
-import BSideCard from '../../components/BSideCard.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
 const page = await getEntry('pages', 'b-side');
@@ -10,39 +9,109 @@ const { Content } = await render(page);
 const entries = (await getCollection('bside', ({ data }) => !data.draft)).sort(
   (a, b) => a.data.order - b.data.order,
 );
+const titleParts = (page.data.heroTitle ?? page.data.title)
+  .replace(/[—-]/g, ' ')
+  .trim()
+  .split(/\s+/);
+const sideLetter = titleParts.shift() ?? 'B';
+const sideName = titleParts.join(' ') || 'Side';
 ---
 
-<BaseLayout title={page.data.title} description={page.data.description}>
-  <header class="bside-hero">
-    <div class="bside-hero-inner shell">
-      <p class="eyebrow">
-        {page.data.eyebrow} · {String(entries.length).padStart(2, '0')} pieces
-      </p>
-      <h1>{page.data.heroTitle}</h1>
-    </div>
-  </header>
+<BaseLayout
+  title={page.data.title}
+  description={page.data.description}
+  pageClass="bside-cassette-page"
+  themeColor="#98633f"
+>
+  <section class="bside-cassette-stage" aria-labelledby="bside-title">
+    <p class="bside-stage-mark bside-stage-mark--left" aria-hidden="true">
+      Personal practice / {new Date().getFullYear()}
+    </p>
+    <p class="bside-stage-mark bside-stage-mark--right" aria-hidden="true">
+      Play in any order
+    </p>
 
-  <section class="bside-intro shell" aria-label="About the B-side">
-    <div class="bside-intro-copy prose-lead">
-      <Content />
-    </div>
-    <p class="bside-intro-note">Experiments, images, and things worth keeping.</p>
-  </section>
+    <div class="bside-cassette">
+      <span class="cassette-edge cassette-edge--top" aria-hidden="true"></span>
+      <span class="cassette-edge cassette-edge--bottom" aria-hidden="true"></span>
+      <span class="cassette-screw cassette-screw--tl" aria-hidden="true"></span>
+      <span class="cassette-screw cassette-screw--tr" aria-hidden="true"></span>
+      <span class="cassette-screw cassette-screw--bl" aria-hidden="true"></span>
+      <span class="cassette-screw cassette-screw--br" aria-hidden="true"></span>
 
-  <section class="bside-index shell" aria-label="B-side archive">
-    {entries.length > 0 ? (
-      <div class="bside-grid">
-        {entries.map((entry, index) => (
-          <BSideCard entry={entry} index={index} />
-        ))}
+      <div class="cassette-label">
+        <header class="cassette-brand">
+          <p class="cassette-kicker">Alex Otake Hsu / {page.data.eyebrow}</p>
+          <h1 id="bside-title">
+            <span>{sideLetter}</span>
+            <span>{sideName}</span>
+          </h1>
+          <div class="cassette-brand-copy">
+            <Content />
+          </div>
+          <p class="cassette-spec">
+            <span>Type I</span>
+            <span>{String(entries.length).padStart(2, '0')} tracks</span>
+            <span>60 min</span>
+          </p>
+        </header>
+
+        {entries.length > 0 ? (
+          <nav class="cassette-tracklist" aria-label="B-side archive">
+            <p class="cassette-tracklist-heading">
+              <span>Track listing</span>
+              <span>A personal mix</span>
+            </p>
+            {entries.map((entry, index) => (
+              <a class="cassette-track" href={`/b-side/${entry.id}`}>
+                <span class="cassette-track-number" aria-hidden="true">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <span class="cassette-track-title">{entry.data.title}</span>
+                <span class="cassette-track-meta">
+                  {entry.data.category} · {entry.data.year}
+                </span>
+                <span class="cassette-track-arrow" aria-hidden="true">
+                  ↗
+                </span>
+              </a>
+            ))}
+          </nav>
+        ) : (
+          <p class="cassette-empty">Add the first track in Pages CMS.</p>
+        )}
       </div>
-    ) : (
-      <p class="bside-empty">Add the first entry in Pages CMS.</p>
-    )}
-  </section>
 
-  <aside class="bside-rail" aria-hidden="true">
-    <strong>B.</strong>
-    <span>Personal archive</span>
-  </aside>
+      <div class="cassette-window" aria-hidden="true">
+        <span class="cassette-tape"></span>
+        <span class="cassette-reel cassette-reel--left">
+          <i></i>
+        </span>
+        <span class="cassette-window-center">
+          <i></i>
+          <i></i>
+        </span>
+        <span class="cassette-reel cassette-reel--right">
+          <i></i>
+        </span>
+      </div>
+
+      <p class="cassette-side-note cassette-side-note--left" aria-hidden="true">
+        Low noise
+      </p>
+      <p class="cassette-side-note cassette-side-note--right" aria-hidden="true">
+        Do not erase
+      </p>
+
+      <div class="cassette-guard" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+
+    <p class="bside-stage-instruction">
+      <span aria-hidden="true">●</span> Select a track to open the archive
+    </p>
+  </section>
 </BaseLayout>
