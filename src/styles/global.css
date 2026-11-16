@@ -160,62 +160,51 @@ select {
   justify-content: flex-end;
   align-items: center;
   width: 100%;
-  padding: 1rem clamp(1rem, 5vw, 6.5rem);
+  padding: clamp(1.25rem, 2.7vw, 2.5rem) clamp(1.5rem, 6vw, 10rem);
   background: transparent;
 }
 
 .site-nav {
   display: flex;
-  gap: clamp(0.9rem, 2vw, 1.75rem);
+  gap: clamp(1rem, 1.7vw, 1.75rem);
+  align-items: center;
 }
 
 .site-nav a {
-  position: relative;
-  padding: 0.12rem 0;
+  display: inline-flex;
+  gap: 0.32em;
+  align-items: baseline;
+  padding: 0.2rem 0;
   color: var(--color-ink);
-  font-size: 0.76rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  font-size: clamp(0.78rem, 1vw, 0.94rem);
+  font-weight: 450;
+  letter-spacing: -0.025em;
+  line-height: 1;
   text-decoration: none;
   text-transform: uppercase;
   transition: opacity var(--transition-fast);
 }
 
 .home-page .site-nav a {
-  color: #f1f0ec;
-}
-
-.home-page .site-nav a::after {
-  background: #f1f0ec;
-}
-
-.site-nav a::after {
-  position: absolute;
-  right: 0;
-  bottom: -0.2rem;
-  left: 0;
-  height: 1px;
-  background: var(--color-accent);
-  content: '';
-  opacity: 0;
-  transform: scaleX(0);
-  transform-origin: left;
-  transition:
-    opacity var(--transition-fast),
-    transform var(--transition-fast);
-}
-
-.site-nav a:hover {
-  opacity: 0.65;
-}
-
-.site-nav a[aria-current='page'] {
   color: var(--color-ink);
 }
 
-.site-nav a[aria-current='page']::after {
-  opacity: 1;
-  transform: scaleX(1);
+.site-nav-label {
+  text-decoration-color: currentColor;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+}
+
+.site-nav a:hover {
+  opacity: 0.62;
+}
+
+.site-nav a[aria-current='page'] {
+  font-weight: 700;
+}
+
+.site-nav a[aria-current='page'] .site-nav-label {
+  text-decoration-line: underline;
 }
 
 /* Home */
@@ -1399,16 +1388,17 @@ select {
   }
 
   .site-header {
-    padding-inline: 1rem;
+    padding: 1rem;
   }
 
   .site-nav {
-    gap: 0.15rem;
+    gap: clamp(0.55rem, 3vw, 1rem);
   }
 
   .site-nav a {
-    padding-inline: 0.5rem;
-    font-size: 0.67rem;
+    gap: 0.24em;
+    padding: 0.25rem 0;
+    font-size: clamp(0.65rem, 2.8vw, 0.76rem);
   }
 
   .page-hero h1,

@@ -264,6 +264,21 @@ const splitBitmapCells = (bitmap: ReturnType<typeof buildBitmap>) => ({
 
 const desktopWordmark = splitBitmapCells(buildBitmap(name));
 const mobileWordmarks = ['Alex Otake', 'Hsu'].map((word) => splitBitmapCells(buildBitmap(word)));
+const wordmarkShardCount = 12;
+const splitIntoShards = (pixels: BitmapPixel[]) => {
+  const shards = Array.from({ length: wordmarkShardCount }, () => [] as BitmapPixel[]);
+
+  pixels.forEach((pixel) => {
+    const column = Math.round(pixel.x * 2);
+    const row = Math.round(pixel.y * 2);
+    const shardIndex = Math.abs(column * 7 + row * 11) % wordmarkShardCount;
+    shards[shardIndex].push(pixel);
+  });
+
+  return shards;
+};
+const desktopWordmarkShards = splitIntoShards(desktopWordmark.pixels);
+const mobileWordmarkShards = mobileWordmarks.map((wordmark) => splitIntoShards(wordmark.pixels));
 // A slight overlap prevents sub-pixel seams in the solid, unhovered wordmark.
 const bitmapCellSize = 0.505;
 ---
@@ -328,26 +343,9 @@ const bitmapCellSize = 0.505;
       preserveAspectRatio="none"
       role="presentation"
     >
-      {desktopWordmark.pixels.map((pixel) => (
-        <rect
-          x={pixel.x}
-          y={pixel.y}
-          width={bitmapCellSize}
-          height={bitmapCellSize}
-          data-cell-x={pixel.x + bitmapCellSize / 2}
-          data-cell-y={pixel.y + bitmapCellSize / 2}
-        />
-      ))}
-    </svg>
-
-    <div class="poster-wordmark-mobile">
-      {mobileWordmarks.map((wordmark) => (
-        <svg
-          viewBox={`0 0 ${wordmark.width} ${wordmark.height}`}
-          preserveAspectRatio="none"
-          role="presentation"
-        >
-          {wordmark.pixels.map((pixel) => (
+      {desktopWordmarkShards.map((pixels, shardIndex) => (
+        <g class="poster-wordmark-shard" data-wordmark-shard data-shard-index={shardIndex}>
+          {pixels.map((pixel) => (
             <rect
               x={pixel.x}
               y={pixel.y}
@@ -356,6 +354,31 @@ const bitmapCellSize = 0.505;
               data-cell-x={pixel.x + bitmapCellSize / 2}
               data-cell-y={pixel.y + bitmapCellSize / 2}
             />
+          ))}
+        </g>
+      ))}
+    </svg>
+
+    <div class="poster-wordmark-mobile">
+      {mobileWordmarks.map((wordmark, wordmarkIndex) => (
+        <svg
+          viewBox={`0 0 ${wordmark.width} ${wordmark.height}`}
+          preserveAspectRatio="none"
+          role="presentation"
+        >
+          {mobileWordmarkShards[wordmarkIndex].map((pixels, shardIndex) => (
+            <g class="poster-wordmark-shard" data-wordmark-shard data-shard-index={shardIndex}>
+              {pixels.map((pixel) => (
+                <rect
+                  x={pixel.x}
+                  y={pixel.y}
+                  width={bitmapCellSize}
+                  height={bitmapCellSize}
+                  data-cell-x={pixel.x + bitmapCellSize / 2}
+                  data-cell-y={pixel.y + bitmapCellSize / 2}
+                />
+              ))}
+            </g>
           ))}
         </svg>
       ))}
@@ -373,6 +396,80 @@ const bitmapCellSize = 0.505;
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
     if (clusters.length === 0 || reducedMotion.matches) return;
+
+    const shardDirections = [
+      { x: -2.2, y: -13, turn: -0.35 },
+      { x: 1.8, y: -17, turn: 0.3 },
+      { x: -1.2, y: -11, turn: -0.2 },
+      { x: 2.4, y: -15, turn: 0.4 },
+      { x: -2.7, y: -18, turn: -0.45 },
+      { x: 1.3, y: -12, turn: 0.22 },
+      { x: -1.8, y: -16, turn: -0.3 },
+      { x: 2.2, y: -11, turn: 0.38 },
+      { x: -0.8, y: -19, turn: -0.24 },
+      { x: 1.9, y: -14, turn: 0.28 },
+      { x: -2.3, y: -17, turn: -0.4 },
+      { x: 1, y: -10, turn: 0.32 },
+    ];
+
+    const wordmarkShards = wordmark
+      ? Array.from(wordmark.querySelectorAll<SVGGElement>('[data-wordmark-shard]')).map(
+          (element) => {
+            const svg = element.ownerSVGElement;
+            const viewBox = svg?.viewBox.baseVal;
+
+            return {
+              element,
+              index: Number(element.dataset.shardIndex ?? 0),
+              centerX: viewBox ? viewBox.x + viewBox.width / 2 : 0,
+              centerY: viewBox ? viewBox.y + viewBox.height / 2 : 0,
+            };
+          },
+        )
+      : [];
+
+    let scrollFrameId = 0;
+    const renderScroll = () => {
+      const bounds = root.getBoundingClientRect();
+      const scrollRange = Math.max(root.offsetHeight * 0.92, 1);
+      const linearProgress = Math.min(Math.max(-bounds.top / scrollRange, 0), 1);
+      const progress = linearProgress * linearProgress * (3 - 2 * linearProgress);
+
+      wordmarkShards.forEach(({ element, index, centerX, centerY }) => {
+        const direction = shardDirections[index % shardDirections.length];
+        const delay = (index % 6) * 0.02;
+        const localProgress = Math.min(Math.max((progress - delay) / (1 - delay), 0), 1);
+        const easedProgress = localProgress * localProgress * (3 - 2 * localProgress);
+        const x = direction.x * easedProgress;
+        const y = direction.y * easedProgress;
+        const turn = direction.turn * easedProgress;
+        const fadeProgress = Math.min(Math.max((localProgress - 0.16) / 0.84, 0), 1);
+
+        element.setAttribute(
+          'transform',
+          `translate(${x.toFixed(3)} ${y.toFixed(3)}) rotate(${turn.toFixed(3)} ${centerX.toFixed(3)} ${centerY.toFixed(3)})`,
+        );
+        element.style.opacity = (1 - Math.pow(fadeProgress, 1.35) * 0.94).toFixed(3);
+      });
+
+      scrollFrameId = 0;
+    };
+
+    const requestScrollRender = () => {
+      if (scrollFrameId === 0) scrollFrameId = window.requestAnimationFrame(renderScroll);
+    };
+
+    const scrollController = new AbortController();
+    window.addEventListener('scroll', requestScrollRender, {
+      passive: true,
+      signal: scrollController.signal,
+    });
+    window.addEventListener('resize', requestScrollRender, {
+      passive: true,
+      signal: scrollController.signal,
+    });
+    document.addEventListener('astro:before-swap', () => scrollController.abort(), { once: true });
+    requestScrollRender();
 
     let frameId = 0;
     let pointerX = 0;
@@ -481,13 +578,13 @@ const bitmapCellSize = 0.505;
 
 <style>
   .poster-hero {
-    --poster-white: #f1f0ec;
+    --poster-ink: #0d0d0f;
     position: relative;
     height: 100svh;
     min-height: 42rem;
     overflow: hidden;
-    background: #050505;
-    color: var(--poster-white);
+    background: #ffffff;
+    color: var(--poster-ink);
     isolation: isolate;
   }
 
@@ -590,11 +687,11 @@ const bitmapCellSize = 0.505;
     display: flex;
     gap: clamp(0.8rem, 2.1vw, 2.5rem);
     align-items: center;
-    color: rgb(241 240 236 / 68%);
+    color: rgb(13 13 15 / 62%);
   }
 
   .poster-meta b {
-    color: var(--poster-white);
+    color: var(--poster-ink);
     font-weight: 500;
   }
 
@@ -643,12 +740,12 @@ const bitmapCellSize = 0.505;
 
   .poster-wordmark {
     position: absolute;
-    z-index: 1;
+    z-index: 5;
     right: clamp(1.25rem, 3vw, 3.5rem);
     bottom: clamp(1.25rem, 2.8vh, 2.5rem);
     left: clamp(1.25rem, 3vw, 3.5rem);
-    color: var(--poster-white);
-    animation: poster-wordmark-in 1.1s 480ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    color: var(--poster-ink);
+    animation: poster-wordmark-in 1.1s 480ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
 
   .poster-wordmark svg {
@@ -656,6 +753,10 @@ const bitmapCellSize = 0.505;
     overflow: visible;
     fill: currentColor;
     shape-rendering: crispEdges;
+  }
+
+  .poster-wordmark-shard {
+    will-change: transform, opacity;
   }
 
   .poster-wordmark rect {
@@ -811,7 +912,7 @@ const bitmapCellSize = 0.505;
       width: 100%;
       height: 7rem;
       flex: 0 0 7rem;
-      overflow: hidden;
+      overflow: visible;
     }
 
     .poster-wordmark-mobile svg:last-child {
@@ -819,7 +920,7 @@ const bitmapCellSize = 0.505;
       height: 4.5rem;
       flex: 0 0 4.5rem;
       align-self: flex-end;
-      overflow: hidden;
+      overflow: visible;
     }
   }
 
@@ -839,6 +940,11 @@ const bitmapCellSize = 0.505;
 
     .poster-wordmark rect {
       transition: none;
+    }
+
+    .poster-wordmark-shard {
+      opacity: 1 !important;
+      transform: none !important;
     }
 
     .poster-cluster span {
