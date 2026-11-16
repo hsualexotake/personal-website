@@ -21,6 +21,7 @@ const {
 const pageTitle = title === site.displayName ? title : `${title} — ${site.displayName}`;
 const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url).toString();
 const socialImage = image ? new URL(image, Astro.site ?? Astro.url).toString() : undefined;
+const isHome = Astro.url.pathname === '/';
 ---
 
 <!doctype html>
@@ -29,7 +30,7 @@ const socialImage = image ? new URL(image, Astro.site ?? Astro.url).toString() :
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
-    <meta name="theme-color" content="#ffffff" />
+    <meta name="theme-color" content={isHome ? '#050505' : '#ffffff'} />
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
@@ -47,7 +48,7 @@ const socialImage = image ? new URL(image, Astro.site ?? Astro.url).toString() :
     {socialImage && <meta name="twitter:image" content={socialImage} />}
     <slot name="head" />
   </head>
-  <body>
+  <body class:list={{ 'home-page': isHome }}>
     <a class="skip-link" href="#main-content">
       Skip to content
     </a>

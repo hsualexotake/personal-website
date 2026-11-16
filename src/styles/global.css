@@ -181,6 +181,14 @@ select {
   transition: opacity var(--transition-fast);
 }
 
+.home-page .site-nav a {
+  color: #f1f0ec;
+}
+
+.home-page .site-nav a::after {
+  background: #f1f0ec;
+}
+
 .site-nav a::after {
   position: absolute;
   right: 0;
